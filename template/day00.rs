@@ -5,7 +5,7 @@ const PROBLEM_NAME: &str = "###";
 const PROBLEM_INPUT_FILE: &str = "./input/day00.txt";
 const PROBLEM_DAY: u64 = 0;
 
-/// Processes the AOC 0000 Day 00 input file and solves both parts of the problem. Solutions are
+/// Processes the AOC 2017 Day 00 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
 pub fn main() {
     let start = Instant::now();
@@ -23,7 +23,7 @@ pub fn main() {
     let p2_duration = p2_timestamp.duration_since(p1_timestamp);
     // Print results
     println!("==================================================");
-    println!("AOC 0000 Day {} - \"{}\"", PROBLEM_DAY, PROBLEM_NAME);
+    println!("AOC 2017 Day {} - \"{}\"", PROBLEM_DAY, PROBLEM_NAME);
     println!("[+] Part 1: {}", p1_solution);
     println!("[+] Part 2: {}", p2_solution);
     println!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -38,7 +38,7 @@ pub fn main() {
     println!("==================================================");
 }
 
-/// Processes the AOC 0000 Day 00 input file in the format required by the solver functions.
+/// Processes the AOC 2017 Day 00 input file in the format required by the solver functions.
 /// Returned value is ###.
 fn process_input_file(filename: &str) -> String {
     // Read contents of problem input file
@@ -47,12 +47,12 @@ fn process_input_file(filename: &str) -> String {
     unimplemented!();
 }
 
-/// Solves AOC 0000 Day 00 Part 1 // ###
+/// Solves AOC 2017 Day 00 Part 1 // ###
 fn solve_part1(_input: &String) -> String {
     unimplemented!();
 }
 
-/// Solves AOC 0000 Day 00 Part 2 // ###
+/// Solves AOC 2017 Day 00 Part 2 // ###
 fn solve_part2(_input: &String) -> String {
     unimplemented!();
 }
