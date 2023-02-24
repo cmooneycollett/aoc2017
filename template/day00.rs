@@ -23,14 +23,14 @@ pub fn main() {
     let p2_duration = p2_timestamp.duration_since(p1_timestamp);
     // Print results
     println!("==================================================");
-    println!("AOC 2017 Day {} - \"{}\"", PROBLEM_DAY, PROBLEM_NAME);
-    println!("[+] Part 1: {}", p1_solution);
-    println!("[+] Part 2: {}", p2_solution);
+    println!("AOC 0000 Day {PROBLEM_DAY} - \"{PROBLEM_NAME}\"");
+    println!("[+] Part 1: {p1_solution}");
+    println!("[+] Part 2: {p2_solution}");
     println!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     println!("Execution times:");
-    println!("[+] Input:  {:.2?}", input_parser_duration);
-    println!("[+] Part 1: {:.2?}", p1_duration);
-    println!("[+] Part 2: {:.2?}", p2_duration);
+    println!("[+] Input:  {input_parser_duration:.2?}");
+    println!("[+] Part 1: {p1_duration:.2?}");
+    println!("[+] Part 2: {p2_duration:.2?}");
     println!(
         "[*] TOTAL:  {:.2?}",
         input_parser_duration + p1_duration + p2_duration

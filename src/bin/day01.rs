@@ -1,11 +1,11 @@
 use std::fs;
 use std::time::Instant;
 
-const PROBLEM_NAME: &str = "###";
+const PROBLEM_NAME: &str = "Inverse Captcha";
 const PROBLEM_INPUT_FILE: &str = "./input/day01.txt";
 const PROBLEM_DAY: u64 = 1;
 
-/// Processes the AOC 2017 Day 1 input file and solves both parts of the problem. Solutions are
+/// Processes the AOC 2017 Day 01 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
 pub fn main() {
     let start = Instant::now();
@@ -23,14 +23,14 @@ pub fn main() {
     let p2_duration = p2_timestamp.duration_since(p1_timestamp);
     // Print results
     println!("==================================================");
-    println!("AOC 2017 Day {} - \"{}\"", PROBLEM_DAY, PROBLEM_NAME);
-    println!("[+] Part 1: {}", p1_solution);
-    println!("[+] Part 2: {}", p2_solution);
+    println!("AOC 0000 Day {PROBLEM_DAY} - \"{PROBLEM_NAME}\"");
+    println!("[+] Part 1: {p1_solution}");
+    println!("[+] Part 2: {p2_solution}");
     println!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     println!("Execution times:");
-    println!("[+] Input:  {:.2?}", input_parser_duration);
-    println!("[+] Part 1: {:.2?}", p1_duration);
-    println!("[+] Part 2: {:.2?}", p2_duration);
+    println!("[+] Input:  {input_parser_duration:.2?}");
+    println!("[+] Part 1: {p1_duration:.2?}");
+    println!("[+] Part 2: {p2_duration:.2?}");
     println!(
         "[*] TOTAL:  {:.2?}",
         input_parser_duration + p1_duration + p2_duration
@@ -38,44 +38,58 @@ pub fn main() {
     println!("==================================================");
 }
 
-/// Processes the AOC 2017 Day 1 input file in the format required by the solver functions.
-/// Returned value is ###.
-fn process_input_file(filename: &str) -> String {
+/// Processes the AOC 2017 Day 01 input file in the format required by the solver functions.
+/// Returned value is vector of digits given in the input file
+fn process_input_file(filename: &str) -> Vec<u32> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input
+        .trim()
+        .chars()
+        .map(|c| c.to_digit(10).unwrap())
+        .collect::<Vec<u32>>()
 }
 
-/// Solves AOC 2017 Day 1 Part 1 // ###
-fn solve_part1(_input: &String) -> String {
-    unimplemented!();
+/// Solves AOC 2017 Day 01 Part 1 // Determines the sum of all digits that match the next digit in
+/// the sequence (circular).
+fn solve_part1(digits: &[u32]) -> u32 {
+    digits
+        .iter()
+        .enumerate()
+        .filter(|(i, c)| **c == digits[(i + 1) % digits.len()])
+        .map(|(_i, c)| c)
+        .sum()
 }
 
-/// Solves AOC 2017 Day 1 Part 2 // ###
-fn solve_part2(_input: &String) -> String {
-    unimplemented!();
+/// Solves AOC 2017 Day 01 Part 2 // Determines the sum of all digits that match the digit half-way
+/// around the sequence (circular).
+fn solve_part2(digits: &[u32]) -> u32 {
+    digits
+        .iter()
+        .enumerate()
+        .filter(|(i, c)| **c == digits[(i + digits.len() / 2) % digits.len()])
+        .map(|(_i, c)| c)
+        .sum()
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
 
-    /// Tests the Day 1 Part 1 solver method against the actual problem solution.
+    /// Tests the Day 01 Part 1 solver method against the actual problem solution.
     #[test]
     fn test_day01_part1_actual() {
         let input = process_input_file(PROBLEM_INPUT_FILE);
-        let _solution = solve_part1(&input);
-        unimplemented!();
-        // assert_eq!("###", solution);
+        let solution = solve_part1(&input);
+        assert_eq!(1150, solution);
     }
 
-    /// Tests the Day 1 Part 2 solver method against the actual problem solution.
+    /// Tests the Day 01 Part 2 solver method against the actual problem solution.
     #[test]
     fn test_day01_part2_actual() {
         let input = process_input_file(PROBLEM_INPUT_FILE);
-        let _solution = solve_part2(&input);
-        unimplemented!();
-        // assert_eq!("###", solution);
+        let solution = solve_part2(&input);
+        assert_eq!(1064, solution);
     }
 }
