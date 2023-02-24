@@ -62,9 +62,15 @@ fn solve_part1(digits: &[u32]) -> u32 {
         .sum()
 }
 
-/// Solves AOC 2017 Day 01 Part 2 // ###
-fn solve_part2(_digits: &[u32]) -> u32 {
-    unimplemented!();
+/// Solves AOC 2017 Day 01 Part 2 // Determines the sum of all digits that match the digit half-way
+/// around the sequence (circular).
+fn solve_part2(digits: &[u32]) -> u32 {
+    digits
+        .iter()
+        .enumerate()
+        .filter(|(i, c)| **c == digits[(i + digits.len() / 2) % digits.len()])
+        .map(|(_i, c)| c)
+        .sum()
 }
 
 #[cfg(test)]
