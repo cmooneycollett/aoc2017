@@ -23,7 +23,7 @@ pub fn main() {
     let p2_duration = p2_timestamp.duration_since(p1_timestamp);
     // Print results
     println!("==================================================");
-    println!("AOC 0000 Day {PROBLEM_DAY} - \"{PROBLEM_NAME}\"");
+    println!("AOC 2017 Day {PROBLEM_DAY} - \"{PROBLEM_NAME}\"");
     println!("[+] Part 1: {p1_solution}");
     println!("[+] Part 2: {p2_solution}");
     println!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
