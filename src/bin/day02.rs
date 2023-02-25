@@ -39,21 +39,34 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 02 input file in the format required by the solver functions.
-/// Returned value is ###.
-fn process_input_file(filename: &str) -> String {
+/// Returned value is vector of vectors containing values given in the lines of the input file.
+fn process_input_file(filename: &str) -> Vec<Vec<u64>> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input
+        .lines()
+        .map(|line| line.trim())
+        .filter(|line| !line.is_empty())
+        .map(|line| {
+            line.split_ascii_whitespace()
+                .map(|elem| elem.parse::<u64>().unwrap())
+                .collect::<Vec<u64>>()
+        })
+        .collect::<Vec<Vec<u64>>>()
 }
 
-/// Solves AOC 2017 Day 02 Part 1 // ###
-fn solve_part1(_input: &String) -> u64 {
-    unimplemented!();
+/// Solves AOC 2017 Day 02 Part 1 // Determines the checksum of the sheet by determining the sum of
+/// the difference between the minimum and maximum values for each row.
+fn solve_part1(sheet: &[Vec<u64>]) -> u64 {
+    sheet
+        .iter()
+        .map(|row| row.iter().max().unwrap() - row.iter().min().unwrap())
+        .sum()
 }
 
 /// Solves AOC 2017 Day 02 Part 2 // ###
-fn solve_part2(_input: &String) -> u64 {
+fn solve_part2(_input: &[Vec<u64>]) -> u64 {
     unimplemented!();
 }
 
