@@ -1,6 +1,8 @@
 use std::fs;
 use std::time::Instant;
 
+use itertools::Itertools;
+
 const PROBLEM_NAME: &str = "High-Entropy Passphrases";
 const PROBLEM_INPUT_FILE: &str = "./input/day04.txt";
 const PROBLEM_DAY: u64 = 4;
@@ -39,22 +41,36 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 04 input file in the format required by the solver functions.
-/// Returned value is vector of string given in the lines of the input file.
-fn process_input_file(filename: &str) -> Vec<String> {
+/// Returned value is vector of containing vector of words separated by whitespace in the input file
+/// lines.
+fn process_input_file(filename: &str) -> Vec<Vec<String>> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input
+        .lines()
+        .map(|line| line.trim())
+        .filter(|line| !line.is_empty())
+        .map(|line| {
+            line.split_ascii_whitespace()
+                .map_into::<String>()
+                .collect::<Vec<String>>()
+        })
+        .collect::<Vec<Vec<String>>>()
 }
 
-/// Solves AOC 2017 Day 04 Part 1 // ###
-fn solve_part1(_passphrases: &[String]) -> usize {
-    unimplemented!();
+/// Solves AOC 2017 Day 04 Part 1 // Counts the number of passphrases that do not no contain any
+/// duplicate words.
+fn solve_part1(passphrases: &[Vec<String>]) -> usize {
+    passphrases
+        .iter()
+        .filter(|pass| pass.len() == pass.iter().unique().count())
+        .count()
 }
 
 /// Solves AOC 2017 Day 04 Part 2 // ###
-fn solve_part2(_passphrases: &[String]) -> usize {
-    unimplemented!();
+fn solve_part2(_passphrases: &[Vec<String>]) -> usize {
+    0
 }
 
 #[cfg(test)]
