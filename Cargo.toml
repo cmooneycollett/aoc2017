@@ -7,4 +7,5 @@ authors = ["Connor Mooney-Collett <connor.mooneycollett@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+aoc-utils = { git = "https://github.com/misfits42/aoc-utils", branch = "main" }
 itertools = "0.10.5"

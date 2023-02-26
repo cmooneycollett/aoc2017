@@ -1,6 +1,8 @@
 use std::fs;
 use std::time::Instant;
 
+use aoc_utils::cartography::Point2D;
+
 const PROBLEM_NAME: &str = "Spiral Memory";
 const PROBLEM_INPUT_FILE: &str = "./input/day03.txt";
 const PROBLEM_DAY: u64 = 3;
@@ -39,22 +41,66 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 03 input file in the format required by the solver functions.
-/// Returned value is ###.
-fn process_input_file(filename: &str) -> String {
+/// Returned value is value given in the input file.
+fn process_input_file(filename: &str) -> u64 {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input.trim().parse::<u64>().unwrap()
 }
 
-/// Solves AOC 2017 Day 03 Part 1 // ###
-fn solve_part1(_input: &String) -> u64 {
-    unimplemented!();
+/// Solves AOC 2017 Day 03 Part 1 // Determines the number of steps needed to carry the data from
+/// the target square to the access port in the centre of the simple spiral.
+fn solve_part1(target: &u64) -> u64 {
+    let (_value, loc) = generate_simple_spiral(*target);
+    loc.get_manhattan_distance(&Point2D::new(0, 0))
 }
 
 /// Solves AOC 2017 Day 03 Part 2 // ###
-fn solve_part2(_input: &String) -> u64 {
-    unimplemented!();
+fn solve_part2(_target: &u64) -> u64 {
+    0
+}
+
+/// Generates a simple spiral and returns the first value over the given target value and its
+/// location.
+fn generate_simple_spiral(target: u64) -> (u64, Point2D) {
+    let mut value = 1;
+    let mut loc = Point2D::new(0, 0);
+    let mut ring = 0;
+    // let mut spiral: HashMap<Point2D, u64> = HashMap::new();
+    let mut delta = (1, 0);
+    while value < target {
+        if value == u64::pow(2 * ring + 1, 2) {
+            // bottom right
+            proceed_to_next_ring_simple_spiral(&mut ring, &mut loc, &mut delta, &mut value);
+            continue;
+        } else if value == u64::pow(2 * ring + 1, 2) - ring * 2 {
+            // bottom left
+            delta = (1, 0);
+        } else if value == u64::pow(2 * ring + 1, 2) - ring * 4 {
+            // top left
+            delta = (0, 1);
+        } else if value == u64::pow(2 * ring + 1, 2) - ring * 6 {
+            // top right
+            delta = (-1, 0);
+        }
+        loc.shift(delta.0, delta.1);
+        value += 1;
+    }
+    (value, loc)
+}
+
+/// Updates the spiral parameters to proceed to the next ring going outwards.
+fn proceed_to_next_ring_simple_spiral(
+    ring: &mut u64,
+    loc: &mut Point2D,
+    delta: &mut (i64, i64),
+    value: &mut u64,
+) {
+    *ring += 1;
+    loc.shift(delta.0, delta.1);
+    *delta = (0, -1);
+    *value += 1;
 }
 
 #[cfg(test)]

@@ -3,9 +3,15 @@
 version = 3
 
 [[package]]
+name = "aoc-utils"
+version = "0.1.0"
+source = "git+https://github.com/misfits42/aoc-utils?branch=main#9d5e90f755e7b6ea2b4fdea220de23292a9cd78f"
+
+[[package]]
 name = "aoc2017"
 version = "0.1.0"
 dependencies = [
+ "aoc-utils",
  "itertools",
 ]
 
