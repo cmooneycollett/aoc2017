@@ -75,7 +75,7 @@ fn solve_part2(passphrases: &[Vec<String>]) -> usize {
         .iter()
         .filter(|pass| {
             iproduct!(pass.iter().enumerate(), pass.iter().enumerate())
-                .filter(|((i, x), (j, y))| i != j && check_anagram(x, y))
+                .filter(|((i, left), (j, right))| i != j && check_anagram(left, right))
                 .count()
                 == 0
         })
