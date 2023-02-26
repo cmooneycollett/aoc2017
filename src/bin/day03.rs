@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::time::Instant;
 
@@ -56,9 +57,11 @@ fn solve_part1(target: &u64) -> u64 {
     loc.get_manhattan_distance(&Point2D::new(0, 0))
 }
 
-/// Solves AOC 2017 Day 03 Part 2 // ###
-fn solve_part2(_target: &u64) -> u64 {
-    0
+/// Solves AOC 2017 Day 03 Part 2 // Determines the first value over the target value that is
+/// generated in the complex spiral.
+fn solve_part2(target: &u64) -> u64 {
+    let (value, _loc) = generate_complex_spiral(*target);
+    value
 }
 
 /// Generates a simple spiral and returns the first value over the given target value and its
@@ -67,7 +70,6 @@ fn generate_simple_spiral(target: u64) -> (u64, Point2D) {
     let mut value = 1;
     let mut loc = Point2D::new(0, 0);
     let mut ring = 0;
-    // let mut spiral: HashMap<Point2D, u64> = HashMap::new();
     let mut delta = (1, 0);
     while value < target {
         if value == u64::pow(2 * ring + 1, 2) {
@@ -101,6 +103,61 @@ fn proceed_to_next_ring_simple_spiral(
     loc.shift(delta.0, delta.1);
     *delta = (0, -1);
     *value += 1;
+}
+
+/// Generates a complex spiral and returns the first value over the given target value and its
+/// location.
+fn generate_complex_spiral(target: u64) -> (u64, Point2D) {
+    let mut value = 1;
+    let mut loc = Point2D::new(0, 0);
+    let mut ring = 0;
+    let mut delta = (1, 0);
+    let mut spiral: HashMap<Point2D, u64> = HashMap::new();
+    while value < target {
+        spiral.insert(loc, value);
+        if loc.x() == ring && loc.y() == ring {
+            // bottom right
+            proceed_to_next_ring_complex_spiral(
+                &mut ring, &mut loc, &mut delta, &mut value, &spiral,
+            );
+            continue;
+        } else if loc.x() == ring && loc.y() == -ring {
+            // top right
+            delta = (-1, 0);
+        } else if loc.x() == -ring && loc.y() == -ring {
+            // top left
+            delta = (0, 1);
+        } else if loc.x() == -ring && loc.y() == ring {
+            // bottom left
+            delta = (1, 0);
+        }
+        loc.shift(delta.0, delta.1);
+        value = calculate_location_value_complex_spiral(&loc, &spiral);
+    }
+    (value, loc)
+}
+
+/// Updates the spiral parameters to proceed to the next ring in a complex spiral.
+fn proceed_to_next_ring_complex_spiral(
+    ring: &mut i64,
+    loc: &mut Point2D,
+    delta: &mut (i64, i64),
+    value: &mut u64,
+    spiral: &HashMap<Point2D, u64>,
+) {
+    *ring += 1;
+    loc.shift(delta.0, delta.1);
+    *delta = (0, -1);
+    *value = calculate_location_value_complex_spiral(loc, spiral);
+}
+
+/// Calculates the value for the given location in the complex spiral, as the sum of all surrounding
+/// values existing in the spiral.
+fn calculate_location_value_complex_spiral(loc: &Point2D, spiral: &HashMap<Point2D, u64>) -> u64 {
+    loc.get_surrounding_points()
+        .iter()
+        .filter_map(|sloc| spiral.get(sloc))
+        .sum()
 }
 
 #[cfg(test)]
