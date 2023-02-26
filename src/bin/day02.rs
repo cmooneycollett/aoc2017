@@ -73,9 +73,9 @@ fn solve_part2(sheet: &[Vec<u64>]) -> u64 {
     sheet
         .iter()
         .map(|row| {
-            iproduct!(row.iter(), row.iter())
-                .filter(|(&a, &b)| a != b && a % b == 0)
-                .map(|(&a, &b)| a / b)
+            iproduct!(row.iter().enumerate(), row.iter().enumerate())
+                .filter(|((i, &val_a), (j, &val_b))| i != j && val_a % val_b == 0)
+                .map(|((_, val_a), (_, val_b))| val_a / val_b)
                 .next()
                 .unwrap()
         })
