@@ -1,6 +1,8 @@
 use std::fs;
 use std::time::Instant;
 
+use itertools::iproduct;
+
 const PROBLEM_NAME: &str = "Corruption Checksum";
 const PROBLEM_INPUT_FILE: &str = "./input/day02.txt";
 const PROBLEM_DAY: u64 = 2;
@@ -65,9 +67,19 @@ fn solve_part1(sheet: &[Vec<u64>]) -> u64 {
         .sum()
 }
 
-/// Solves AOC 2017 Day 02 Part 2 // ###
-fn solve_part2(_input: &[Vec<u64>]) -> u64 {
-    unimplemented!();
+/// Solves AOC 2017 Day 02 Part 2 // Determines the checksum of the sheet by finding the sum of the
+/// division result of the two values from each row that are evenly divisible.
+fn solve_part2(sheet: &[Vec<u64>]) -> u64 {
+    sheet
+        .iter()
+        .map(|row| {
+            iproduct!(row.iter(), row.iter())
+                .filter(|(&a, &b)| a != b && a % b == 0)
+                .map(|(&a, &b)| a / b)
+                .next()
+                .unwrap()
+        })
+        .sum()
 }
 
 #[cfg(test)]
