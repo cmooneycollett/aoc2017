@@ -1,7 +1,7 @@
 use std::fs;
 use std::time::Instant;
 
-use itertools::Itertools;
+use itertools::{iproduct, Itertools};
 
 const PROBLEM_NAME: &str = "High-Entropy Passphrases";
 const PROBLEM_INPUT_FILE: &str = "./input/day04.txt";
@@ -68,9 +68,25 @@ fn solve_part1(passphrases: &[Vec<String>]) -> usize {
         .count()
 }
 
-/// Solves AOC 2017 Day 04 Part 2 // ###
-fn solve_part2(_passphrases: &[Vec<String>]) -> usize {
-    0
+/// Solves AOC 2017 Day 04 Part 2 // Counts the number of passphrases that do not contain two
+/// strings which are anagrams of each other.
+fn solve_part2(passphrases: &[Vec<String>]) -> usize {
+    passphrases
+        .iter()
+        .filter(|pass| {
+            iproduct!(pass.iter().enumerate(), pass.iter().enumerate())
+                .filter(|((i, x), (j, y))| i != j && check_anagram(x, y))
+                .count()
+                == 0
+        })
+        .count()
+}
+
+/// Checks if the left and right strings are anagrams of each other.
+fn check_anagram(left: &str, right: &str) -> bool {
+    let left_chars = left.chars().sorted().collect::<Vec<char>>();
+    let right_chars = right.chars().sorted().collect::<Vec<char>>();
+    left_chars == right_chars
 }
 
 #[cfg(test)]
