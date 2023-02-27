@@ -39,22 +39,56 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 05 input file in the format required by the solver functions.
-/// Returned value is ###.
-fn process_input_file(filename: &str) -> Vec<i64> {
+/// Returned value is vector of integer values given in the lines of the input file.
+fn process_input_file(filename: &str) -> Vec<isize> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input
+        .lines()
+        .map(|line| line.trim())
+        .filter(|line| !line.is_empty())
+        .map(|line| line.parse::<isize>().unwrap())
+        .collect::<Vec<isize>>()
 }
 
-/// Solves AOC 2017 Day 05 Part 1 // ###
-fn solve_part1(_jumps: &[i64]) -> u64 {
-    unimplemented!();
+/// Solves AOC 2017 Day 05 Part 1 // Determines the number of jumps needed for the cursor to reach
+/// the exit (outside of the jump space).
+fn solve_part1(jumps: &[isize]) -> u64 {
+    // Check if the jump space is empty
+    if jumps.is_empty() {
+        return 0;
+    }
+    // Initialise
+    let mut jumps = jumps.to_vec();
+    let mut cursor = 0;
+    let mut steps = 0;
+    loop {
+        let delta = jumps[cursor];
+        jumps[cursor] += 1;
+        steps += 1;
+        // Check if jump takes cursor outside of jump space, and update cursor location
+        match delta.is_positive() {
+            true => {
+                if delta.unsigned_abs() + cursor >= jumps.len() {
+                    break;
+                }
+                cursor += delta.unsigned_abs();
+            }
+            false => {
+                if delta.unsigned_abs() > cursor {
+                    break;
+                }
+                cursor -= delta.unsigned_abs();
+            }
+        }
+    }
+    steps
 }
 
 /// Solves AOC 2017 Day 05 Part 2 // ###
-fn solve_part2(_jumps: &[i64]) -> u64 {
-    unimplemented!();
+fn solve_part2(_jumps: &[isize]) -> u64 {
+    0
 }
 
 #[cfg(test)]
