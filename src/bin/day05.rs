@@ -52,9 +52,24 @@ fn process_input_file(filename: &str) -> Vec<isize> {
         .collect::<Vec<isize>>()
 }
 
-/// Solves AOC 2017 Day 05 Part 1 // Determines the number of jumps needed for the cursor to reach
-/// the exit (outside of the jump space).
+/// Solves AOC 2017 Day 05 Part 1 // Determines the number of steps needed for the cursor to exit
+/// the jump space.
 fn solve_part1(jumps: &[isize]) -> u64 {
+    calculate_steps_to_exit_jumpspace(jumps, false)
+}
+
+/// Solves AOC 2017 Day 05 Part 2 // Determines the number of steps needed for the cursor to exit
+/// the jump space, using strange jumps.
+fn solve_part2(jumps: &[isize]) -> u64 {
+    calculate_steps_to_exit_jumpspace(jumps, true)
+}
+
+/// Calculates the number of steps needed for the cursor to exit the jump space.
+///
+/// If strange jumps are used, the location value that is being jumped from by the cursor is
+/// decreased by 1 if the offset was 3 or more; otherwise (or if not using strange jumps), the
+/// location value is increased by 1.
+fn calculate_steps_to_exit_jumpspace(jumps: &[isize], strange_jumps: bool) -> u64 {
     // Check if the jump space is empty
     if jumps.is_empty() {
         return 0;
@@ -65,7 +80,14 @@ fn solve_part1(jumps: &[isize]) -> u64 {
     let mut steps = 0;
     loop {
         let delta = jumps[cursor];
-        jumps[cursor] += 1;
+        // Update the location value being jumped from by the cursor
+        jumps[cursor] += {
+            if delta >= 3 && strange_jumps {
+                -1
+            } else {
+                1
+            }
+        };
         steps += 1;
         // Check if jump takes cursor outside of jump space, and update cursor location
         match delta.is_positive() {
@@ -84,11 +106,6 @@ fn solve_part1(jumps: &[isize]) -> u64 {
         }
     }
     steps
-}
-
-/// Solves AOC 2017 Day 05 Part 2 // ###
-fn solve_part2(_jumps: &[isize]) -> u64 {
-    0
 }
 
 #[cfg(test)]
