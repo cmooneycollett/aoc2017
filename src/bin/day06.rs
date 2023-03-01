@@ -1,5 +1,5 @@
 use std::collections::hash_map::DefaultHasher;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::time::Instant;
@@ -7,6 +7,10 @@ use std::time::Instant;
 const PROBLEM_NAME: &str = "Memory Reallocation";
 const PROBLEM_INPUT_FILE: &str = "./input/day06.txt";
 const PROBLEM_DAY: u64 = 6;
+
+/// Custom error type indicating that redistribution was attempted on an empty group of membanks.
+#[derive(Debug)]
+struct EmptyBanksError;
 
 /// Processes the AOC 2017 Day 06 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
@@ -57,21 +61,41 @@ fn process_input_file(filename: &str) -> Vec<u64> {
 /// Solves AOC 2017 Day 06 Part 1 // Determines how many redistribution cycles must be completed
 /// before a configuration is produced that has already been observed.
 fn solve_part1(banks: &[u64]) -> u64 {
+    match find_repeated_banks_arrangement_steps(banks) {
+        Ok((steps, _)) => steps,
+        Err(EmptyBanksError) => panic!("Invalid banks!"),
+    }
+}
+
+/// Solves AOC 2017 Day 06 Part 2 // Determines the length of the cycle in steps between the
+/// repeated arrangments of the banks. A single redistribution cycle is conducted on each step.
+fn solve_part2(banks: &[u64]) -> u64 {
+    match find_repeated_banks_arrangement_steps(banks) {
+        Ok((_, cycle_steps)) => cycle_steps,
+        Err(EmptyBanksError) => panic!("Invalid banks!"),
+    }
+}
+
+/// Finds the total number of steps needed to reach a repeated banks arrangement after conducting
+/// redistribution cycles, as well as the length of the cycle between repeated arrangements in
+/// steps (as tuple).
+///
+/// Returns [`EmptyBanksError`] if the input collection is empty.
+fn find_repeated_banks_arrangement_steps(banks: &[u64]) -> Result<(u64, u64), EmptyBanksError> {
     if banks.is_empty() {
-        return 0;
+        return Err(EmptyBanksError);
     }
     let mut banks = banks.to_vec();
-    let mut observed: HashSet<u64> = HashSet::from([hash_banks(&banks)]);
     let mut steps = 0;
+    let mut observed: HashMap<u64, u64> = HashMap::from([(hash_banks(&banks), steps)]);
     loop {
         steps += 1;
         conduct_redistribution_cycle(&mut banks);
         // Record banks hash and check if it has already been observed
-        if !observed.insert(hash_banks(&banks)) {
-            break;
+        if let Some(last_steps) = observed.insert(hash_banks(&banks), steps) {
+            return Ok((steps, steps - last_steps));
         }
     }
-    steps
 }
 
 /// Conduct a single redistribution cycle of blocks between the banks.
@@ -102,11 +126,7 @@ fn find_index_of_largest_bank(banks: &[u64]) -> usize {
     i.unwrap()
 }
 
-/// Solves AOC 2017 Day 06 Part 2 // ###
-fn solve_part2(_input: &[u64]) -> u64 {
-    unimplemented!();
-}
-
+/// Calculates the hash of the banks collection.
 fn hash_banks(banks: &[u64]) -> u64 {
     let mut hasher = DefaultHasher::new();
     banks.hash(&mut hasher);
