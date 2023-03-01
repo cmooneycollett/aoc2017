@@ -1,4 +1,7 @@
+use std::collections::hash_map::DefaultHasher;
+use std::collections::HashSet;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::time::Instant;
 
 const PROBLEM_NAME: &str = "Memory Reallocation";
@@ -39,22 +42,75 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 06 input file in the format required by the solver functions.
-/// Returned value is ###.
+/// Returned value is vector of values given as whitespace-separated values in the input file.
 fn process_input_file(filename: &str) -> Vec<u64> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input
+        .trim()
+        .split_ascii_whitespace()
+        .map(|value| value.parse::<u64>().unwrap())
+        .collect::<Vec<u64>>()
 }
 
-/// Solves AOC 2017 Day 06 Part 1 // ###
-fn solve_part1(_input: &[u64]) -> u64 {
-    unimplemented!();
+/// Solves AOC 2017 Day 06 Part 1 // Determines how many redistribution cycles must be completed
+/// before a configuration is produced that has already been observed.
+fn solve_part1(banks: &[u64]) -> u64 {
+    if banks.is_empty() {
+        return 0;
+    }
+    let mut banks = banks.to_vec();
+    let mut observed: HashSet<u64> = HashSet::from([hash_banks(&banks)]);
+    let mut steps = 0;
+    loop {
+        steps += 1;
+        conduct_redistribution_cycle(&mut banks);
+        // Record banks hash and check if it has already been observed
+        if !observed.insert(hash_banks(&banks)) {
+            break;
+        }
+    }
+    steps
+}
+
+/// Conduct a single redistribution cycle of blocks between the banks.
+fn conduct_redistribution_cycle(banks: &mut Vec<u64>) {
+    let mut i = find_index_of_largest_bank(banks);
+    let mut blocks = banks[i];
+    banks[i] = 0;
+    while blocks > 0 {
+        i = (i + 1) % banks.len();
+        banks[i] += 1;
+        blocks -= 1;
+    }
+}
+
+/// Finds the index of the bank with the largest number of blocks. Ties are broken by selecting the
+/// bank with the lower-numbered index.
+///
+/// Input banks must not be empty vector.
+fn find_index_of_largest_bank(banks: &[u64]) -> usize {
+    let mut i: Option<usize> = None;
+    let mut max_value: Option<u64> = None;
+    for (j, value) in banks.iter().enumerate() {
+        if max_value.is_none() || max_value.unwrap() < *value {
+            i = Some(j);
+            max_value = Some(*value);
+        }
+    }
+    i.unwrap()
 }
 
 /// Solves AOC 2017 Day 06 Part 2 // ###
 fn solve_part2(_input: &[u64]) -> u64 {
     unimplemented!();
+}
+
+fn hash_banks(banks: &[u64]) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    banks.hash(&mut hasher);
+    hasher.finish()
 }
 
 #[cfg(test)]
