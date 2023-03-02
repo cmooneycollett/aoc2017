@@ -63,7 +63,7 @@ fn process_input_file(filename: &str) -> Vec<u64> {
 fn solve_part1(banks: &[u64]) -> u64 {
     match find_repeated_banks_arrangement_steps(banks) {
         Ok((steps, _)) => steps,
-        Err(EmptyBanksError) => panic!("Invalid banks!"),
+        Err(EmptyBanksError) => panic!("The banks are empty and cannot be redistributed!"),
     }
 }
 
@@ -72,7 +72,7 @@ fn solve_part1(banks: &[u64]) -> u64 {
 fn solve_part2(banks: &[u64]) -> u64 {
     match find_repeated_banks_arrangement_steps(banks) {
         Ok((_, cycle_steps)) => cycle_steps,
-        Err(EmptyBanksError) => panic!("Invalid banks!"),
+        Err(EmptyBanksError) => panic!("The banks are empty and cannot be redistributed!"),
     }
 }
 
@@ -90,7 +90,7 @@ fn find_repeated_banks_arrangement_steps(banks: &[u64]) -> Result<(u64, u64), Em
     let mut observed: HashMap<u64, u64> = HashMap::from([(hash_banks(&banks), steps)]);
     loop {
         steps += 1;
-        conduct_redistribution_cycle(&mut banks);
+        conduct_redistribution_cycle(&mut banks)?;
         // Record banks hash and check if it has already been observed
         if let Some(last_steps) = observed.insert(hash_banks(&banks), steps) {
             return Ok((steps, steps - last_steps));
@@ -99,8 +99,10 @@ fn find_repeated_banks_arrangement_steps(banks: &[u64]) -> Result<(u64, u64), Em
 }
 
 /// Conduct a single redistribution cycle of blocks between the banks.
-fn conduct_redistribution_cycle(banks: &mut Vec<u64>) {
-    let mut i = find_index_of_largest_bank(banks);
+///
+/// Returns [`EmptyBanksError`] if the given collection is empty.
+fn conduct_redistribution_cycle(banks: &mut Vec<u64>) -> Result<(), EmptyBanksError> {
+    let mut i = find_index_of_largest_bank(banks)?;
     let mut blocks = banks[i];
     banks[i] = 0;
     while blocks > 0 {
@@ -108,13 +110,17 @@ fn conduct_redistribution_cycle(banks: &mut Vec<u64>) {
         banks[i] += 1;
         blocks -= 1;
     }
+    Ok(())
 }
 
 /// Finds the index of the bank with the largest number of blocks. Ties are broken by selecting the
 /// bank with the lower-numbered index.
 ///
-/// Input banks must not be empty vector.
-fn find_index_of_largest_bank(banks: &[u64]) -> usize {
+/// Returns [`EmptyBanksError`] if the given collection is empty.
+fn find_index_of_largest_bank(banks: &[u64]) -> Result<usize, EmptyBanksError> {
+    if banks.is_empty() {
+        return Err(EmptyBanksError);
+    }
     let mut i: Option<usize> = None;
     let mut max_value: Option<u64> = None;
     for (j, value) in banks.iter().enumerate() {
@@ -123,7 +129,7 @@ fn find_index_of_largest_bank(banks: &[u64]) -> usize {
             max_value = Some(*value);
         }
     }
-    i.unwrap()
+    Ok(i.unwrap())
 }
 
 /// Calculates the hash of the banks collection.
