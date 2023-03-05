@@ -14,10 +14,10 @@ const PROBLEM_DAY: u64 = 7;
 /// to collection of other program names sitting on top of the program.
 type ProblemInput = (HashMap<String, u64>, HashMap<String, Vec<String>>);
 
-/// Custom error type indicating a failure to process the program tree information generated from
+/// Custom error type indicating a failure to process the program tower information generated from
 /// the input file.
 #[derive(Debug)]
-struct ProgramTreeProcessingError;
+struct ProgramTowerProcessingError;
 
 /// Processes the AOC 2017 Day 07 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
@@ -102,7 +102,7 @@ fn solve_part1(input: &ProblemInput) -> String {
     let (_, program_children) = input;
     match find_bottom_program_name(program_children) {
         Ok(name) => name,
-        Err(ProgramTreeProcessingError) => panic!("Failed to find the name of the bottom program"),
+        Err(ProgramTowerProcessingError) => panic!("Failed to find the name of the bottom program"),
     }
 }
 
@@ -112,7 +112,7 @@ fn solve_part2(input: &ProblemInput) -> u64 {
     let (program_weights, parent_to_children) = input;
     match find_unbalanced_program_corrected_weight(program_weights, parent_to_children) {
         Ok(correct_weight) => correct_weight,
-        Err(ProgramTreeProcessingError) => {
+        Err(ProgramTowerProcessingError) => {
             panic!("Failed to find corrected weight! Program tower is already balanced.")
         }
     }
@@ -120,10 +120,10 @@ fn solve_part2(input: &ProblemInput) -> u64 {
 
 /// Finds the name of the bottom program (the first program that is not on top of another program).
 ///
-/// Returns [`ProgramTreeProcessingError`] if there is no bottom program found.
+/// Returns [`ProgramTowerProcessingError`] if there is no bottom program found.
 fn find_bottom_program_name(
     program_children: &HashMap<String, Vec<String>>,
-) -> Result<String, ProgramTreeProcessingError> {
+) -> Result<String, ProgramTowerProcessingError> {
     let children = program_children
         .values()
         .flat_map(|vec| vec.iter())
@@ -133,7 +133,7 @@ fn find_bottom_program_name(
         return Ok(bottom_name.to_string());
     }
     // Failed to find the name of the bottom program
-    Err(ProgramTreeProcessingError)
+    Err(ProgramTowerProcessingError)
 }
 
 /// Converts the mapping of parent-to-children programs (one to many) into a mapping of
@@ -152,103 +152,107 @@ fn generate_child_to_parent_mapping(
 
 /// Finds the corrected weight for the one program in the tower that is the incorrect weight.
 ///
-/// Returns [`ProgramTreeProcessingError`] if the program tree is already balanced.
+/// Returns [`ProgramTowerProcessingError`] if the program tower is already balanced.
 fn find_unbalanced_program_corrected_weight(
     program_weights: &HashMap<String, u64>,
     parent_to_children: &HashMap<String, Vec<String>>,
-) -> Result<u64, ProgramTreeProcessingError> {
+) -> Result<u64, ProgramTowerProcessingError> {
     let child_to_parent = generate_child_to_parent_mapping(parent_to_children);
-    let mut calculated_weights: HashMap<String, u64> = HashMap::new();
-    for name in parent_to_children
+    let mut tower_weights: HashMap<String, u64> = HashMap::new();
+    // Enter the program tower from each of the leaf programs (those with no parents)
+    for current_program in parent_to_children
         .iter()
         .filter(|(_p, c)| c.is_empty())
         .map(|(p, _c)| p)
     {
+        // Check if ok value returned
         if let Some(corrected_weight) = find_unbalanced_program_corrected_weight_recursive(
-            name,
+            current_program,
             program_weights,
             parent_to_children,
             &child_to_parent,
-            &mut calculated_weights,
+            &mut tower_weights,
         ) {
             return Ok(corrected_weight);
         }
     }
-    Err(ProgramTreeProcessingError)
+    Err(ProgramTowerProcessingError)
 }
 
 /// Recursive helper function for finding the corrected weight of the one program in the tower with
 /// the incorrect weight.
 ///
-/// Returns [`ProgramTreeProcessingError`] if the bottom program is reached before the program with
+/// Returns [`ProgramTowerProcessingError`] if the bottom program is reached before the program with
 /// the incorrect weight is found. This is the case when the program tower is already balanced.
 fn find_unbalanced_program_corrected_weight_recursive(
     current_program: &str,
     program_weights: &HashMap<String, u64>,
     parent_to_children: &HashMap<String, Vec<String>>,
     child_to_parent: &HashMap<String, String>,
-    calculated_weights: &mut HashMap<String, u64>,
+    tower_weights: &mut HashMap<String, u64>,
 ) -> Option<u64> {
-    // Check if we are on a top program
+    // Check if we are on a leaf program (program with no other on top of it)
     if parent_to_children.get(current_program).unwrap().is_empty() {
-        calculated_weights.insert(
+        tower_weights.insert(
             current_program.to_string(),
             *program_weights.get(current_program).unwrap(),
         );
     } else {
-        // check if all child programs have been visited
+        // Record the tower weights mapped to the program weights of child towers
+        let mut program_tower_weight = 0;
+        let mut weight_occurrences: HashMap<u64, Vec<u64>> = HashMap::new();
         for child in parent_to_children.get(current_program).unwrap() {
-            if !calculated_weights.contains_key(child) {
+            // Only proceed if all child programs have been visited
+            if !tower_weights.contains_key(child) {
                 return None;
             }
-        }
-        let mut current_program_weight = 0;
-        let mut weight_occurrences: HashMap<u64, u64> = HashMap::new();
-        let mut child_weight_record: HashMap<String, u64> = HashMap::new();
-        for child in parent_to_children.get(current_program).unwrap() {
-            let child_weight = *calculated_weights.get(child).unwrap();
-            child_weight_record.insert(child.to_string(), child_weight);
-            current_program_weight += child_weight;
+            let child_weight = *tower_weights.get(child).unwrap();
+            program_tower_weight += child_weight;
             if let Entry::Vacant(e) = weight_occurrences.entry(child_weight) {
-                e.insert(1);
+                e.insert(vec![*program_weights.get(child).unwrap()]);
             } else {
-                *weight_occurrences.get_mut(&child_weight).unwrap() += 1;
+                weight_occurrences
+                    .get_mut(&child_weight)
+                    .unwrap()
+                    .push(*program_weights.get(child).unwrap());
             }
         }
-        // Check if mismatched weight found
-        let valid_weight = *weight_occurrences
+        // Check if mismatched tower weight is found
+        let tower_weight_balanced = *weight_occurrences
             .iter()
-            .max_by_key(|entry| entry.1)
+            .max_by_key(|entry| entry.1.len())
             .unwrap()
             .0;
-        for (child_name, weight) in child_weight_record {
-            if weight != valid_weight {
-                let delta = u64::abs_diff(valid_weight, weight);
-                let child_weight = program_weights.get(&child_name).unwrap();
-                let corrected_weight = if valid_weight > weight {
-                    child_weight + delta
-                } else {
-                    child_weight - delta
-                };
-                return Some(corrected_weight);
-            }
+        let (&tower_weight_unbalanced, &program_weight_unbalanced) = weight_occurrences
+            .iter()
+            .min_by_key(|entry| entry.1.len())
+            .map(|(k, v)| (k, v.iter().next().unwrap()))
+            .unwrap();
+        if tower_weight_balanced != tower_weight_unbalanced {
+            let delta_weight = u64::abs_diff(tower_weight_balanced, tower_weight_unbalanced);
+            let program_weight_corrected = if tower_weight_balanced > tower_weight_unbalanced {
+                program_weight_unbalanced + delta_weight
+            } else {
+                program_weight_unbalanced - delta_weight
+            };
+            return Some(program_weight_corrected);
         }
-        // Record calculated weight of current program
-        current_program_weight += program_weights.get(current_program).unwrap();
-        calculated_weights.insert(current_program.to_string(), current_program_weight);
+        // Record the tower weight for current program
+        program_tower_weight += program_weights.get(current_program).unwrap();
+        tower_weights.insert(current_program.to_string(), program_tower_weight);
     }
-    // Go to the parent program
+    // Proceed to the parent of the current program
     if let Some(parent) = child_to_parent.get(current_program) {
-        find_unbalanced_program_corrected_weight_recursive(
+        return find_unbalanced_program_corrected_weight_recursive(
             parent,
             program_weights,
             parent_to_children,
             child_to_parent,
-            calculated_weights,
-        )
-    } else {
-        None
+            tower_weights,
+        );
     }
+    // Reached the bottom program without finding an unbalanced tower weight
+    None
 }
 
 #[cfg(test)]
