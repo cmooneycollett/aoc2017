@@ -1,9 +1,104 @@
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::fs;
+use std::str::FromStr;
 use std::time::Instant;
+
+use fancy_regex::Regex;
+use lazy_static::lazy_static;
 
 const PROBLEM_NAME: &str = "I Heard You Like Registers";
 const PROBLEM_INPUT_FILE: &str = "./input/day08.txt";
 const PROBLEM_DAY: u64 = 8;
+
+lazy_static! {
+    static ref REGEX_INSTRUCTION: Regex =
+        Regex::new(r"^([a-z]+) (inc|dec) (-?\d+) if ([a-z]+) (>|>=|==|<|<=|!=) (-?\d+)$").unwrap();
+}
+
+/// Custom error type indicating that the parsing of an Instruction has failed.
+#[derive(Debug)]
+struct InstructionParseError;
+
+/// Represents a single instruction used in this problem.
+struct Instruction {
+    reg_target: String,
+    op: Operation,
+    delta: i64,
+    reg_check: String,
+    comp: Comparator,
+    check_value: i64,
+}
+
+impl FromStr for Instruction {
+    type Err = InstructionParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(Some(caps)) = REGEX_INSTRUCTION.captures(s) {
+            let reg_target = caps[1].to_string();
+            let op = Operation::from_str(&caps[2])?;
+            let delta = caps[3].parse::<i64>().unwrap();
+            let reg_check = caps[4].to_string();
+            let comp = Comparator::from_str(&caps[5])?;
+            let check_value = caps[6].parse::<i64>().unwrap();
+            return Ok(Instruction {
+                reg_target,
+                op,
+                delta,
+                reg_check,
+                comp,
+                check_value,
+            });
+        }
+        Err(InstructionParseError)
+    }
+}
+
+/// Represents the operations that can be applied to a register value.
+#[derive(Clone, Copy)]
+enum Operation {
+    Increase,
+    Decrease,
+}
+
+impl FromStr for Operation {
+    type Err = InstructionParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "inc" => Ok(Operation::Increase),
+            "dec" => Ok(Operation::Decrease),
+            _ => Err(InstructionParseError),
+        }
+    }
+}
+
+/// Represents the comparators that occur in the instructions from the problem.
+#[derive(Clone, Copy)]
+enum Comparator {
+    GreaterThan,
+    GreaterThanOrEqual,
+    Equal,
+    LessThan,
+    LessThanOrEqual,
+    NotEqual,
+}
+
+impl FromStr for Comparator {
+    type Err = InstructionParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            ">" => Ok(Comparator::GreaterThan),
+            ">=" => Ok(Comparator::GreaterThanOrEqual),
+            "==" => Ok(Comparator::Equal),
+            "<" => Ok(Comparator::LessThan),
+            "<=" => Ok(Comparator::LessThanOrEqual),
+            "!=" => Ok(Comparator::NotEqual),
+            _ => Err(InstructionParseError),
+        }
+    }
+}
 
 /// Processes the AOC 2017 Day 08 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
@@ -39,22 +134,73 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 08 input file in the format required by the solver functions.
-/// Returned value is ###.
-fn process_input_file(filename: &str) -> String {
+/// Returned value is vector of Instructions parsed from the lines of the input file.
+fn process_input_file(filename: &str) -> Vec<Instruction> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input
+        .lines()
+        .map(|line| line.trim())
+        .filter(|line| !line.is_empty())
+        .map(|line| Instruction::from_str(line).unwrap())
+        .collect::<Vec<Instruction>>()
 }
 
 /// Solves AOC 2017 Day 08 Part 1 // ###
-fn solve_part1(_input: &String) -> i64 {
-    unimplemented!();
+fn solve_part1(instructions: &[Instruction]) -> i64 {
+    if let (Some(max_at_end), _) = process_instructions(instructions) {
+        return max_at_end;
+    }
+    panic!("Failed to find maximum register value at end of instruction processing!");
 }
 
 /// Solves AOC 2017 Day 08 Part 2 // ###
-fn solve_part2(_input: &String) -> i64 {
-    unimplemented!();
+fn solve_part2(_instructions: &[Instruction]) -> i64 {
+    0
+}
+
+fn process_instructions(instructions: &[Instruction]) -> (Option<i64>, Option<i64>) {
+    let mut regs: HashMap<&str, i64> = HashMap::new();
+    let mut max_value: Option<i64> = None;
+    for instruct in instructions.iter() {
+        // Add target register
+        if let Entry::Vacant(e) = regs.entry(instruct.reg_target.as_str()) {
+            e.insert(0);
+        }
+        // Add check register
+        if let Entry::Vacant(e) = regs.entry(instruct.reg_check.as_str()) {
+            e.insert(0);
+        }
+        let reg_check_value = *regs.get(instruct.reg_check.as_str()).unwrap();
+        let update_reg = match instruct.comp {
+            Comparator::GreaterThan => reg_check_value > instruct.check_value,
+            Comparator::GreaterThanOrEqual => reg_check_value >= instruct.check_value,
+            Comparator::Equal => reg_check_value == instruct.check_value,
+            Comparator::LessThan => reg_check_value < instruct.check_value,
+            Comparator::LessThanOrEqual => reg_check_value <= instruct.check_value,
+            Comparator::NotEqual => reg_check_value != instruct.check_value,
+        };
+        if update_reg {
+            *regs.get_mut(instruct.reg_target.as_str()).unwrap() += match instruct.op {
+                Operation::Increase => instruct.delta,
+                Operation::Decrease => -instruct.delta,
+            };
+        }
+        // Check value of target register
+        if max_value.is_none()
+            || *regs.get(instruct.reg_target.as_str()).unwrap() > max_value.unwrap()
+        {
+            max_value = Some(*regs.get(instruct.reg_target.as_str()).unwrap());
+        }
+        // Check value of check register
+        if max_value.is_none()
+            || *regs.get(instruct.reg_check.as_str()).unwrap() > max_value.unwrap()
+        {
+            max_value = Some(*regs.get(instruct.reg_check.as_str()).unwrap());
+        }
+    }
+    (regs.values().max().copied(), max_value)
 }
 
 #[cfg(test)]
