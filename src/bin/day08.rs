@@ -165,6 +165,8 @@ fn solve_part2(instructions: &[Instruction]) -> i64 {
     panic!("Failed to find maximum register value during processing of instructions!");
 }
 
+/// Processes the given instructions, returning the maximum value at the end of processing and
+/// during processing as a tuple. Both tuple elements will be None if the input collection is empty.
 fn process_instructions(instructions: &[Instruction]) -> (Option<i64>, Option<i64>) {
     let mut regs: HashMap<&str, i64> = HashMap::new();
     let mut max_value: Option<i64> = None;
