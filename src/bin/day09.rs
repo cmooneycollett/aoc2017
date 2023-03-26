@@ -56,18 +56,24 @@ fn solve_part1(chars: &[char]) -> u64 {
     let mut in_garbage = false;
     while cursor < chars.len() {
         match chars[cursor] {
-            '{' => if !in_garbage {
-                depth += 1;
-            },
-            '}' => if !in_garbage && depth > 0 {
-                score += depth;
-                depth -= 1;
-            },
+            '{' => {
+                if !in_garbage {
+                    depth += 1;
+                }
+            }
+            '}' => {
+                if !in_garbage && depth > 0 {
+                    score += depth;
+                    depth -= 1;
+                }
+            }
             '<' => in_garbage = true,
             '>' => in_garbage = false,
-            '!' => if in_garbage {
-                cursor += 1;
-            },
+            '!' => {
+                if in_garbage {
+                    cursor += 1;
+                }
+            }
             _ => (),
         }
         cursor += 1;
@@ -75,9 +81,31 @@ fn solve_part1(chars: &[char]) -> u64 {
     score
 }
 
-/// Solves AOC 2017 Day 09 Part 2 // ###
-fn solve_part2(_chars: &[char]) -> u64 {
-    unimplemented!();
+/// Solves AOC 2017 Day 09 Part 2 // Counts the number of non-cancelled characters within the
+/// garbage sections of the character sequence.
+fn solve_part2(chars: &[char]) -> u64 {
+    let mut garbage_count: u64 = 0;
+    let mut cursor: usize = 0;
+    let mut in_garbage = false;
+    while cursor < chars.len() {
+        if in_garbage {
+            garbage_count += 1;
+        }
+        match chars[cursor] {
+            '<' => in_garbage = true,
+            '>' => {
+                in_garbage = false;
+                garbage_count -= 1;
+            }
+            '!' => {
+                cursor += 1;
+                garbage_count -= 1;
+            }
+            _ => (),
+        }
+        cursor += 1;
+    }
+    garbage_count
 }
 
 #[cfg(test)]
