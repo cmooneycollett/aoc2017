@@ -39,17 +39,40 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 09 input file in the format required by the solver functions.
-/// Returned value is ###.
+/// Returned value is vector of chars from input file.
 fn process_input_file(filename: &str) -> Vec<char> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input.trim().chars().collect::<Vec<char>>()
 }
 
-/// Solves AOC 2017 Day 09 Part 1 // ###
-fn solve_part1(_chars: &[char]) -> u64 {
-    unimplemented!();
+/// Solves AOC 2017 Day 09 Part 1 // Calculates the total score for all groups in the character
+/// sequence.
+fn solve_part1(chars: &[char]) -> u64 {
+    let mut depth: u64 = 0;
+    let mut score: u64 = 0;
+    let mut cursor: usize = 0;
+    let mut in_garbage = false;
+    while cursor < chars.len() {
+        match chars[cursor] {
+            '{' => if !in_garbage {
+                depth += 1;
+            },
+            '}' => if !in_garbage && depth > 0 {
+                score += depth;
+                depth -= 1;
+            },
+            '<' => in_garbage = true,
+            '>' => in_garbage = false,
+            '!' => if in_garbage {
+                cursor += 1;
+            },
+            _ => (),
+        }
+        cursor += 1;
+    }
+    score
 }
 
 /// Solves AOC 2017 Day 09 Part 2 // ###
