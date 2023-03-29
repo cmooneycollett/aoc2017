@@ -1,6 +1,8 @@
 use std::fs;
 use std::time::Instant;
 
+use itertools::Itertools;
+
 const PROBLEM_NAME: &str = "Knot Hash";
 const PROBLEM_INPUT_FILE: &str = "./input/day10.txt";
 const PROBLEM_DAY: u64 = 10;
@@ -60,9 +62,9 @@ fn solve_part1(input_string: &str) -> u64 {
     strand[0] * strand[1]
 }
 
-/// Solves AOC 2017 Day 10 Part 2 // ###
-fn solve_part2(_input: &str) -> String {
-    unimplemented!();
+/// Solves AOC 2017 Day 10 Part 2 // Calculates the knot hash of the given string.
+fn solve_part2(input_string: &str) -> String {
+    calculate_knot_hash(input_string)
 }
 
 /// Calculates the sparse hash of the given strand. Returns the resulting strand, final cursor
@@ -93,6 +95,36 @@ fn calculate_sparse_hash(
         skip += 1;
     }
     (strand, cursor, skip)
+}
+
+/// Calculates the knot hash of the input string, including input processing (length sequence suffix
+/// append), 64 rounds of knot hash algorithm and output processing (dense hash calculation and
+/// conversion to hexadecimal string).
+fn calculate_knot_hash(input_string: &str) -> String {
+    // Input processing
+    let mut lengths = input_string
+        .chars()
+        .map(|c| c as usize)
+        .collect::<Vec<usize>>();
+    lengths.append(&mut vec![17, 31, 73, 47, 23]);
+    // Apply 64 rounds of the sparse hash algorithm
+    let mut strand = (0..=255).collect::<Vec<u64>>();
+    let mut cursor = 0;
+    let mut skip = 0;
+    for _ in 0..64 {
+        (strand, cursor, skip) = calculate_sparse_hash(&strand, &lengths, cursor, skip);
+    }
+    // Convert to dense hash
+    let mut dense_hash: Vec<u64> = vec![];
+    for i in (0..strand.len()).step_by(16) {
+        let mut xor = strand[i];
+        for delta in 1..=15 {
+            xor ^= strand[i + delta];
+        }
+        dense_hash.push(xor);
+    }
+    // Convert dense hash to hexadecimal representation
+    dense_hash.iter().map(|val| format!("{:02x}", val)).join("")
 }
 
 #[cfg(test)]
