@@ -39,22 +39,60 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 10 input file in the format required by the solver functions.
-/// Returned value is ###.
+/// Returned value is string contained in the input file.
 fn process_input_file(filename: &str) -> String {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input.trim().to_string()
 }
 
-/// Solves AOC 2017 Day 10 Part 1 // ###
-fn solve_part1(_input: &String) -> u64 {
-    unimplemented!();
+/// Solves AOC 2017 Day 10 Part 1 // Calculates the sparse hash of the numbers 0-255 inclusive using
+/// the comma-separated values in the input string, and returns the product of the first two values
+/// of the sparse hash.
+fn solve_part1(input_string: &str) -> u64 {
+    let lengths = input_string
+        .split(',')
+        .map(|val| val.parse::<usize>().unwrap())
+        .collect::<Vec<usize>>();
+    let strand = (0..=255).collect::<Vec<u64>>();
+    let (strand, _, _) = calculate_sparse_hash(&strand, &lengths, 0, 0);
+    strand[0] * strand[1]
 }
 
 /// Solves AOC 2017 Day 10 Part 2 // ###
-fn solve_part2(_input: &String) -> String {
+fn solve_part2(_input: &str) -> String {
     unimplemented!();
+}
+
+/// Calculates the sparse hash of the given strand. Returns the resulting strand, final cursor
+/// value, and final skip value.
+fn calculate_sparse_hash(
+    strand: &[u64],
+    lengths: &[usize],
+    cursor: usize,
+    skip: usize,
+) -> (Vec<u64>, usize, usize) {
+    let mut strand = strand.to_vec();
+    let mut cursor = cursor;
+    let mut skip = skip;
+    for &len in lengths {
+        // Reverse target segment
+        let mut segment: Vec<u64> = vec![];
+        for delta in 0..len {
+            let i = (cursor + delta) % strand.len();
+            segment.push(strand[i]);
+        }
+        segment.reverse();
+        for (j, &segment_elem) in segment.iter().enumerate() {
+            let i = (cursor + j) % strand.len();
+            strand[i] = segment_elem;
+        }
+        // Update cursor location and increment skip value
+        cursor = (cursor + len + skip) % strand.len();
+        skip += 1;
+    }
+    (strand, cursor, skip)
 }
 
 #[cfg(test)]
