@@ -73,8 +73,8 @@ fn process_input_file(filename: &str) -> Vec<HexGridDirection> {
     let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
     raw_input
-        .split(",")
-        .filter_map(|s| HexGridDirection::from_string(s))
+        .split(',')
+        .filter_map(HexGridDirection::from_string)
         .collect::<Vec<HexGridDirection>>()
 }
 
@@ -85,13 +85,22 @@ fn solve_part1(input: &[HexGridDirection]) -> u64 {
     for dirn in input {
         update_point3d_location(&mut loc, dirn);
     }
-    let coords = [loc.x().abs(), loc.y().abs(), loc.z().abs()];
-    coords.iter().max().unwrap().unsigned_abs()
+    get_steps_from_origin(&loc)
 }
 
-/// Solves AOC 2017 Day 11 Part 2 // ###
-fn solve_part2(_input: &[HexGridDirection]) -> u64 {
-    0
+/// Solves AOC 2017 Day 11 Part 2 // Determines the maximum number of steps from the origin that the
+/// child process reaches during its journey.
+fn solve_part2(input: &[HexGridDirection]) -> u64 {
+    let mut loc = Point3D::new(0, 0, 0);
+    let mut maximum_distance = 0;
+    for dirn in input {
+        update_point3d_location(&mut loc, dirn);
+        let distance = get_steps_from_origin(&loc);
+        if distance > maximum_distance {
+            maximum_distance = distance;
+        }
+    }
+    maximum_distance
 }
 
 /// Updates the Point3D location based on the next tile specified by the [`HexGridDirection`]
@@ -105,6 +114,13 @@ fn update_point3d_location(loc: &mut Point3D, dirn: &HexGridDirection) {
         HexGridDirection::SouthWest => loc.shift(-1, 1, 0),
         HexGridDirection::NorthWest => loc.shift(-1, 0, 1),
     }
+}
+
+/// Gets the number of steps from the origin represented by the Point3D location. The location is
+/// taken to be a point on a two-dimensional hexagon grid.
+fn get_steps_from_origin(loc: &Point3D) -> u64 {
+    let coords = [loc.x().abs(), loc.y().abs(), loc.z().abs()];
+    coords.iter().max().unwrap().unsigned_abs()
 }
 
 #[cfg(test)]
