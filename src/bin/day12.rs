@@ -1,9 +1,21 @@
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::time::Instant;
+
+use fancy_regex::Regex;
+use lazy_static::lazy_static;
 
 const PROBLEM_NAME: &str = "Digital Plumber";
 const PROBLEM_INPUT_FILE: &str = "./input/day12.txt";
 const PROBLEM_DAY: u64 = 12;
+
+lazy_static! {
+    static ref INPUT_LINE_REGEX: Regex = Regex::new(r"^(\d+) <-> (.*)$").unwrap();
+}
+
+/// Custom error type indicating that the parsing of a line from the input file has failed.
+#[derive(Debug)]
+struct InputLineParseError;
 
 /// Processes the AOC 2017 Day 12 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
@@ -39,22 +51,62 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 12 input file in the format required by the solver functions.
-/// Returned value is ###.
-fn process_input_file(filename: &str) -> String {
+/// Returned value is HashMap mapping each program to the other it is directly connected to via
+/// pipes.
+fn process_input_file(filename: &str) -> HashMap<u64, Vec<u64>> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    let mut program_conns: HashMap<u64, Vec<u64>> = HashMap::new();
+    for line in raw_input.lines() {
+        if let Ok((left, right)) = parse_input_file_line(line) {
+            program_conns.insert(left, right);
+        }
+    }
+    program_conns
 }
 
-/// Solves AOC 2017 Day 12 Part 1 // ###
-fn solve_part1(_input: &String) -> String {
-    unimplemented!();
+/// Solves AOC 2017 Day 12 Part 1 // Determines the number of programs in the group containing the
+/// program '0'.
+fn solve_part1(input: &HashMap<u64, Vec<u64>>) -> usize {
+    determine_program_group_size(0, input)
 }
 
 /// Solves AOC 2017 Day 12 Part 2 // ###
-fn solve_part2(_input: &String) -> String {
+fn solve_part2(_iinput: &HashMap<u64, Vec<u64>>) -> usize {
     unimplemented!();
+}
+
+/// Determines the number of programs in the group containing the start program.
+fn determine_program_group_size(start: u64, program_conns: &HashMap<u64, Vec<u64>>) -> usize {
+    let mut visited: HashSet<u64> = HashSet::new();
+    let mut visit_queue: VecDeque<u64> = VecDeque::from([start]);
+    while !visit_queue.is_empty() {
+        let program = visit_queue.pop_front().unwrap();
+        visited.insert(program);
+        if let Some(conns) = program_conns.get(&program) {
+            for next in conns {
+                if !visited.contains(next) {
+                    visit_queue.push_back(*next);
+                }
+            }
+        }
+    }
+    visited.len()
+}
+
+/// Parses one line from the input file to extract the left program and its connected right
+/// programs.
+fn parse_input_file_line(s: &str) -> Result<(u64, Vec<u64>), InputLineParseError> {
+    if let Ok(Some(caps)) = INPUT_LINE_REGEX.captures(s) {
+        let left = caps[1].parse::<u64>().unwrap();
+        let right = caps[2]
+            .split(',')
+            .map(|v| v.trim().parse::<u64>().unwrap())
+            .collect::<Vec<u64>>();
+        return Ok((left, right));
+    }
+    Err(InputLineParseError)
 }
 
 #[cfg(test)]
@@ -65,17 +117,15 @@ mod test {
     #[test]
     fn test_day12_part1_actual() {
         let input = process_input_file(PROBLEM_INPUT_FILE);
-        let _solution = solve_part1(&input);
-        unimplemented!();
-        // assert_eq!("###", solution);
+        let solution = solve_part1(&input);
+        assert_eq!(288, solution);
     }
 
     /// Tests the Day 12 Part 2 solver method against the actual problem solution.
     #[test]
     fn test_day12_part2_actual() {
         let input = process_input_file(PROBLEM_INPUT_FILE);
-        let _solution = solve_part2(&input);
-        unimplemented!();
-        // assert_eq!("###", solution);
+        let solution = solve_part2(&input);
+        assert_eq!(211, solution);
     }
 }
