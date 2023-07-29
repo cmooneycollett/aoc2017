@@ -2,9 +2,20 @@ use std::collections::HashMap;
 use std::fs;
 use std::time::Instant;
 
+use fancy_regex::Regex;
+use lazy_static::lazy_static;
+
 const PROBLEM_NAME: &str = "Packet Scanners";
 const PROBLEM_INPUT_FILE: &str = "./input/day13.txt";
 const PROBLEM_DAY: u64 = 13;
+
+lazy_static! {
+    static ref INPUT_LINE_REGEX: Regex = Regex::new(r"^(\d+): (\d+)$").unwrap();
+}
+
+/// Custom error type indicating that the parsing of a line from the input file has failed.
+#[derive(Debug)]
+struct InputLineParseError;
 
 /// Processes the AOC 2017 Day 13 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
@@ -40,17 +51,41 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 13 input file in the format required by the solver functions.
-/// Returned value is ###.
+/// Returned value is HashMap mapping the depth of each firewall to its range.
 fn process_input_file(filename: &str) -> HashMap<u64, u64> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input
+        .trim()
+        .lines()
+        .map(|s| parse_input_file_line(s))
+        .filter(|s| s.is_ok())
+        .map(|s| s.unwrap())
+        .collect::<HashMap<u64, u64>>()
 }
 
-/// Solves AOC 2017 Day 13 Part 1 // ###
+/// Parses a single line from the input file to extract required values.
+///
+/// If Ok() is returned,contained value represents the depth and range of the firewall specified by
+/// the file line. Otherwise, an [`InputLineParseError`] is returned.
+fn parse_input_file_line(s: &str) -> Result<(u64, u64), InputLineParseError> {
+    if let Ok(Some(caps)) = INPUT_LINE_REGEX.captures(s) {
+        let depth = caps[1].parse::<u64>().unwrap();
+        let range = caps[2].parse::<u64>().unwrap();
+        return Ok((depth, range));
+    }
+    Err(InputLineParseError)
+}
+
+/// Solves AOC 2017 Day 13 Part 1 // Determines the severity score for the trip if there is no delay
+/// before commencement of the firewall transit.
 fn solve_part1(input: &HashMap<u64, u64>) -> u64 {
-    unimplemented!();
+    input
+        .iter()
+        .filter(|(depth, range)| *depth % (2 * (*range - 1)) == 0)
+        .map(|(depth, range)| depth * range)
+        .sum()
 }
 
 /// Solves AOC 2017 Day 13 Part 2 // ###
