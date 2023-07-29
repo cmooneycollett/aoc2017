@@ -1,4 +1,5 @@
 use std::fs;
+use std::str::FromStr;
 use std::time::Instant;
 
 use aoc_utils::cartography::Point3D;
@@ -6,6 +7,10 @@ use aoc_utils::cartography::Point3D;
 const PROBLEM_NAME: &str = "Hex Ed";
 const PROBLEM_INPUT_FILE: &str = "./input/day11.txt";
 const PROBLEM_DAY: u64 = 11;
+
+/// Custom error type indicating that the parsing of an HexGridDirection has failed.
+#[derive(Debug)]
+struct HexGridDirectionParseError;
 
 /// Represents the six virtual directions from one hexagon tile to another adjoining tile.
 enum HexGridDirection {
@@ -17,17 +22,19 @@ enum HexGridDirection {
     NorthWest,
 }
 
-impl HexGridDirection {
+impl FromStr for HexGridDirection {
+    type Err = HexGridDirectionParseError;
+
     /// Converts the given string to the corresponding variant of [`HexGridDirection`].
-    fn from_string(s: &str) -> Option<HexGridDirection> {
-        match s.trim().to_lowercase().as_str() {
-            "n" => Some(HexGridDirection::North),
-            "ne" => Some(HexGridDirection::NorthEast),
-            "se" => Some(HexGridDirection::SouthEast),
-            "s" => Some(HexGridDirection::South),
-            "sw" => Some(HexGridDirection::SouthWest),
-            "nw" => Some(HexGridDirection::NorthWest),
-            _ => None,
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "n" => Ok(HexGridDirection::North),
+            "ne" => Ok(HexGridDirection::NorthEast),
+            "se" => Ok(HexGridDirection::SouthEast),
+            "s" => Ok(HexGridDirection::South),
+            "sw" => Ok(HexGridDirection::SouthWest),
+            "nw" => Ok(HexGridDirection::NorthWest),
+            _ => Err(HexGridDirectionParseError),
         }
     }
 }
@@ -73,8 +80,11 @@ fn process_input_file(filename: &str) -> Vec<HexGridDirection> {
     let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
     raw_input
+        .trim()
         .split(',')
-        .filter_map(HexGridDirection::from_string)
+        .map(|s| HexGridDirection::from_str(s))
+        .filter(|s| s.is_ok())
+        .map(|s| s.unwrap())
         .collect::<Vec<HexGridDirection>>()
 }
 
