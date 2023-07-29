@@ -82,9 +82,7 @@ fn process_input_file(filename: &str) -> Vec<HexGridDirection> {
     raw_input
         .trim()
         .split(',')
-        .map(|s| HexGridDirection::from_str(s))
-        .filter(|s| s.is_ok())
-        .map(|s| s.unwrap())
+        .filter_map(|s| HexGridDirection::from_str(s).ok())
         .collect::<Vec<HexGridDirection>>()
 }
 
