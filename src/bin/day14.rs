@@ -1,5 +1,8 @@
 use std::fs;
+use std::num::ParseIntError;
 use std::time::Instant;
+
+use aoc2017::utils::knot_hash::calculate_knot_hash;
 
 const PROBLEM_NAME: &str = "Disk Defragmentation";
 const PROBLEM_INPUT_FILE: &str = "./input/day14.txt";
@@ -39,22 +42,36 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 14 input file in the format required by the solver functions.
-/// Returned value is ###.
+/// Returned value is string given in the input file.
 fn process_input_file(filename: &str) -> String {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
-    // Process input file contents into data structure
-    unimplemented!();
+    fs::read_to_string(filename).unwrap().trim().to_string()
 }
 
-/// Solves AOC 2017 Day 14 Part 1 // ###
-fn solve_part1(_input: &str) -> usize {
-    unimplemented!();
+/// Solves AOC 2017 Day 14 Part 1 // Determines the number of squares used in the disk grid, with
+/// rows based on knot hash calculations.
+fn solve_part1(input: &str) -> usize {
+    (0..=127)
+        .map(|v| calculate_knot_hash(&format!("{input}-{v}")))
+        .map(|s| convert_string_hexadecimal_to_binary(&s).unwrap())
+        .map(|s| s.chars().filter(|c| *c == '1').count())
+        .sum()
 }
 
 /// Solves AOC 2017 Day 14 Part 2 // ###
 fn solve_part2(_input: &str) -> usize {
     unimplemented!();
+}
+
+/// Converts a hexadecimal string to its equivalent representation as a binary string (zero-padded).
+fn convert_string_hexadecimal_to_binary(s: &str) -> Result<String, ParseIntError> {
+    let mut binary_string = String::new();
+    for c in s.chars() {
+        let digit = u32::from_str_radix(&c.to_string(), 16)?;
+        let binary_digit = format!("{digit:04b}");
+        binary_string.push_str(&binary_digit);
+    }
+    Ok(binary_string)
 }
 
 #[cfg(test)]
@@ -65,17 +82,15 @@ mod test {
     #[test]
     fn test_day14_part1_actual() {
         let input = process_input_file(PROBLEM_INPUT_FILE);
-        let _solution = solve_part1(&input);
-        unimplemented!();
-        // assert_eq!("###", solution);
+        let solution = solve_part1(&input);
+        assert_eq!(8190, solution);
     }
 
     /// Tests the Day 14 Part 2 solver method against the actual problem solution.
     #[test]
     fn test_day14_part2_actual() {
         let input = process_input_file(PROBLEM_INPUT_FILE);
-        let _solution = solve_part2(&input);
-        unimplemented!();
-        // assert_eq!("###", solution);
+        let solution = solve_part2(&input);
+        assert_eq!(1134, solution);
     }
 }
