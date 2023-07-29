@@ -59,23 +59,8 @@ fn process_input_file(filename: &str) -> HashMap<u64, u64> {
     raw_input
         .trim()
         .lines()
-        .map(|s| parse_input_file_line(s))
-        .filter(|s| s.is_ok())
-        .map(|s| s.unwrap())
+        .filter_map(|s| parse_input_file_line(s).ok())
         .collect::<HashMap<u64, u64>>()
-}
-
-/// Parses a single line from the input file to extract required values.
-///
-/// If Ok() is returned,contained value represents the depth and range of the firewall specified by
-/// the file line. Otherwise, an [`InputLineParseError`] is returned.
-fn parse_input_file_line(s: &str) -> Result<(u64, u64), InputLineParseError> {
-    if let Ok(Some(caps)) = INPUT_LINE_REGEX.captures(s) {
-        let depth = caps[1].parse::<u64>().unwrap();
-        let range = caps[2].parse::<u64>().unwrap();
-        return Ok((depth, range));
-    }
-    Err(InputLineParseError)
 }
 
 /// Solves AOC 2017 Day 13 Part 1 // Determines the severity score for the trip if there is no delay
@@ -88,9 +73,41 @@ fn solve_part1(input: &HashMap<u64, u64>) -> u64 {
         .sum()
 }
 
-/// Solves AOC 2017 Day 13 Part 2 // ###
-fn solve_part2(_input: &HashMap<u64, u64>) -> u64 {
-    unimplemented!();
+/// Solves AOC 2017 Day 13 Part 2 // Determines the total delay (in picoseconds) prior to
+/// commencement required to complete the firewall transit without being caught.
+fn solve_part2(input: &HashMap<u64, u64>) -> u64 {
+    let mut delay_ps = 0;
+    loop {
+        // For each firewall, check if we will collide with its detector (at the top of range)
+        let mut caught = false;
+        for (depth, range) in input.iter() {
+            let cycle = 2 * (range - 1);
+            if (depth + delay_ps) % cycle == 0 {
+                caught = true;
+                break;
+            }
+        }
+        // We have successfully completed the transit without being caught
+        if !caught {
+            break;
+        }
+        // We were caught, so we need to increase our delay and reattempt the transit
+        delay_ps += 1;
+    }
+    delay_ps
+}
+
+/// Parses a single line from the input file to extract required values.
+///
+/// If Ok() is returned, the wrapped value represents the depth and range of the firewall specified
+/// by the file line. Otherwise, an [`InputLineParseError`] is returned.
+fn parse_input_file_line(s: &str) -> Result<(u64, u64), InputLineParseError> {
+    if let Ok(Some(caps)) = INPUT_LINE_REGEX.captures(s) {
+        let depth = caps[1].parse::<u64>().unwrap();
+        let range = caps[2].parse::<u64>().unwrap();
+        return Ok((depth, range));
+    }
+    Err(InputLineParseError)
 }
 
 #[cfg(test)]
