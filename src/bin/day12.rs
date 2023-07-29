@@ -69,30 +69,24 @@ fn process_input_file(filename: &str) -> HashMap<u64, Vec<u64>> {
 /// Solves AOC 2017 Day 12 Part 1 // Determines the number of programs in the group containing the
 /// program '0'.
 fn solve_part1(input: &HashMap<u64, Vec<u64>>) -> usize {
-    determine_program_group_size(0, input)
+    determine_program_group_members(0, input).len()
 }
 
-/// Solves AOC 2017 Day 12 Part 2 // ###
-fn solve_part2(_iinput: &HashMap<u64, Vec<u64>>) -> usize {
-    unimplemented!();
-}
-
-/// Determines the number of programs in the group containing the start program.
-fn determine_program_group_size(start: u64, program_conns: &HashMap<u64, Vec<u64>>) -> usize {
+/// Solves AOC 2017 Day 12 Part 2 // Determines the total number of separate programs groups
+/// specified in the program connections.
+fn solve_part2(input: &HashMap<u64, Vec<u64>>) -> usize {
     let mut visited: HashSet<u64> = HashSet::new();
-    let mut visit_queue: VecDeque<u64> = VecDeque::from([start]);
-    while !visit_queue.is_empty() {
-        let program = visit_queue.pop_front().unwrap();
-        visited.insert(program);
-        if let Some(conns) = program_conns.get(&program) {
-            for next in conns {
-                if !visited.contains(next) {
-                    visit_queue.push_back(*next);
-                }
-            }
+    let mut total_program_groups = 0;
+    for program in input.keys() {
+        // Skip any programs that have observed in a previously visited group
+        if !visited.contains(program) {
+            // Update the overall record of programs visited to prevent double-counting
+            let run_visited = determine_program_group_members(*program, input);
+            visited.extend(run_visited);
+            total_program_groups += 1;
         }
     }
-    visited.len()
+    total_program_groups
 }
 
 /// Parses one line from the input file to extract the left program and its connected right
@@ -107,6 +101,27 @@ fn parse_input_file_line(s: &str) -> Result<(u64, Vec<u64>), InputLineParseError
         return Ok((left, right));
     }
     Err(InputLineParseError)
+}
+
+/// Determines the members of the program group containing the start program.
+fn determine_program_group_members(
+    start: u64,
+    program_conns: &HashMap<u64, Vec<u64>>,
+) -> HashSet<u64> {
+    let mut visited: HashSet<u64> = HashSet::new();
+    let mut visit_queue: VecDeque<u64> = VecDeque::from([start]);
+    while !visit_queue.is_empty() {
+        let program = visit_queue.pop_front().unwrap();
+        visited.insert(program);
+        if let Some(conns) = program_conns.get(&program) {
+            for next in conns {
+                if !visited.contains(next) {
+                    visit_queue.push_back(*next);
+                }
+            }
+        }
+    }
+    visited
 }
 
 #[cfg(test)]
