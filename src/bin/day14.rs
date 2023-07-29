@@ -1,12 +1,19 @@
+use std::collections::{HashSet, VecDeque};
 use std::fs;
 use std::num::ParseIntError;
 use std::time::Instant;
 
 use aoc2017::utils::knot_hash::calculate_knot_hash;
+use itertools::iproduct;
 
 const PROBLEM_NAME: &str = "Disk Defragmentation";
 const PROBLEM_INPUT_FILE: &str = "./input/day14.txt";
 const PROBLEM_DAY: u64 = 14;
+
+const DISK_GRID_MIN_X: usize = 0;
+const DISK_GRID_MAX_X: usize = 127;
+const DISK_GRID_MIN_Y: usize = 0;
+const DISK_GRID_MAX_Y: usize = 127;
 
 /// Processes the AOC 2017 Day 14 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
@@ -58,9 +65,81 @@ fn solve_part1(input: &str) -> usize {
         .sum()
 }
 
-/// Solves AOC 2017 Day 14 Part 2 // ###
-fn solve_part2(_input: &str) -> usize {
-    unimplemented!();
+/// Solves AOC 2017 Day 14 Part 2 // Determines the number of regions present in the disk grid.
+fn solve_part2(input: &str) -> usize {
+    // Generate disk grid (128x128 grid)
+    let disk_grid: Vec<Vec<char>> = (0..=127)
+        .map(|v| calculate_knot_hash(&format!("{input}-{v}")))
+        .map(|s| {
+            convert_string_hexadecimal_to_binary(&s)
+                .unwrap()
+                .chars()
+                .collect::<Vec<char>>()
+        })
+        .collect::<Vec<Vec<char>>>();
+    // Set up for the breadth-first search
+    let mut region_count = 0;
+    let mut visited: HashSet<(usize, usize)> = HashSet::new();
+    // Try each grid location as possible region starting point
+    for (x, y) in iproduct!(
+        DISK_GRID_MIN_X..=DISK_GRID_MAX_X,
+        DISK_GRID_MIN_Y..=DISK_GRID_MAX_Y
+    ) {
+        // New region found if location is used and not already visited
+        if !visited.contains(&(x, y)) && disk_grid[y][x] == '1' {
+            let region_locations = determine_region_locations(x, y, &disk_grid);
+            visited.extend(region_locations.iter());
+            region_count += 1;
+        }
+    }
+    region_count
+}
+
+/// Determines the locations in the region containing the starting location.
+fn determine_region_locations(
+    start_x: usize,
+    start_y: usize,
+    disk_grid: &[Vec<char>],
+) -> HashSet<(usize, usize)> {
+    let mut visited: HashSet<(usize, usize)> = HashSet::new();
+    let mut visit_queue: VecDeque<(usize, usize)> = VecDeque::from([(start_x, start_y)]);
+    while !visit_queue.is_empty() {
+        let (x, y) = visit_queue.pop_front().unwrap();
+        visited.insert((x, y));
+        for next_loc in determine_possible_next_locations(x, y, disk_grid) {
+            if !visited.contains(&next_loc) {
+                visit_queue.push_back(next_loc)
+            }
+        }
+    }
+    visited
+}
+
+/// Determine the possible next locations for a region based on the current x- and y-value.
+///
+/// This function takes into account the disk grid size when checking for possible next locations.
+/// Only locations containing a "used" marker (denoted with a '1') are candidates for possible next
+/// locations.
+fn determine_possible_next_locations(
+    x: usize,
+    y: usize,
+    disk_grid: &[Vec<char>],
+) -> Vec<(usize, usize)> {
+    let mut output: Vec<(usize, usize)> = vec![];
+    // Check for case where (x,y) is at the top, bottom, left or right edge of grid
+    if x > DISK_GRID_MIN_X && disk_grid[y][x - 1] == '1' {
+        output.push((x - 1, y));
+    }
+    if x < DISK_GRID_MAX_X && disk_grid[y][x + 1] == '1' {
+        output.push((x + 1, y));
+    }
+    if y > DISK_GRID_MIN_Y && disk_grid[y - 1][x] == '1' {
+        output.push((x, y - 1));
+    }
+    if y < DISK_GRID_MAX_Y && disk_grid[y + 1][x] == '1' {
+        output.push((x, y + 1));
+    }
+    output
 }
 
 /// Converts a hexadecimal string to its equivalent representation as a binary string (zero-padded).
