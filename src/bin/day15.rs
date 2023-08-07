@@ -21,7 +21,7 @@ struct InputFileParseError;
 /// Number of generator rounds conducted in problem part 1
 const PART1_ROUNDS: u64 = 40_000_000;
 /// Number of generator rounds conducted in problem part 2
-const _PART2_ROUNDS: u64 = 5_000_000;
+const PART2_ROUNDS: u64 = 5_000_000;
 /// Factor used by the A generator
 const GEN_A_FACTOR: u64 = 16_807;
 /// Factor used by the B generator
@@ -35,7 +35,6 @@ struct ValueGenerator {
     factor: u64,
     modulus: u64,
     check_fn: fn(u64) -> bool,
-    rounds: usize,
 }
 
 impl ValueGenerator {
@@ -46,7 +45,6 @@ impl ValueGenerator {
             factor,
             modulus,
             check_fn,
-            rounds: 0,
         }
     }
 }
@@ -56,11 +54,9 @@ impl Iterator for ValueGenerator {
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let candidate: u64 = (self.value * self.factor) % self.modulus;
-            if (self.check_fn)(candidate) {
-                self.rounds += 1;
-                self.value = candidate;
-                return Some(candidate);
+            self.value = (self.value * self.factor) % self.modulus;
+            if (self.check_fn)(self.value) {
+                return Some(self.value);
             }
         }
     }
@@ -117,9 +113,14 @@ fn solve_part1(input: &(u64, u64)) -> usize {
     count_matching_value_pairs(&mut gen_a, &mut gen_b, PART1_ROUNDS)
 }
 
-/// Solves AOC 2017 Day 15 Part 2 // ###
-fn solve_part2(_input: &(u64, u64)) -> usize {
-    unimplemented!();
+/// Solves AOC 2017 Day 15 Part 2 // Determines the number of matching values from the A and B
+/// generators after 5 million pairs, with each generator using a non-trivial value-checking
+/// function.
+fn solve_part2(input: &(u64, u64)) -> usize {
+    let (gen_a_start, gen_b_start) = *input;
+    let mut gen_a = ValueGenerator::new(gen_a_start, GEN_A_FACTOR, GEN_MODULUS, |v| v % 4 == 0);
+    let mut gen_b = ValueGenerator::new(gen_b_start, GEN_B_FACTOR, GEN_MODULUS, |v| v % 8 == 0);
+    count_matching_value_pairs(&mut gen_a, &mut gen_b, PART2_ROUNDS)
 }
 
 /// Parses the contents of the input file and returns the values needed by the solution functions.
