@@ -8,16 +8,6 @@ const PROBLEM_NAME: &str = "Dueling Generators";
 const PROBLEM_INPUT_FILE: &str = "./input/day15.txt";
 const PROBLEM_DAY: u64 = 15;
 
-lazy_static! {
-    static ref INPUT_REGEX: Regex =
-        Regex::new(r"(?ms)^Generator A starts with (\d+)$.*^Generator B starts with (\d+)$")
-            .unwrap();
-}
-
-/// Custom error type indicating that the parsing of the input file has failed.
-#[derive(Debug)]
-struct InputFileParseError;
-
 /// Number of generator rounds conducted in problem part 1
 const PART1_ROUNDS: u64 = 40_000_000;
 /// Number of generator rounds conducted in problem part 2
@@ -28,6 +18,16 @@ const GEN_A_FACTOR: u64 = 16_807;
 const GEN_B_FACTOR: u64 = 48_271;
 /// Modulus value used by both generators
 const GEN_MODULUS: u64 = 2_147_483_647;
+
+lazy_static! {
+    static ref INPUT_REGEX: Regex =
+        Regex::new(r"(?ms)^Generator A starts with (\d+)$.*^Generator B starts with (\d+)$")
+            .unwrap();
+}
+
+/// Custom error type indicating that the parsing of the input file has failed.
+#[derive(Debug)]
+struct InputFileParseError;
 
 /// Value generator used in the AOC 2017 Day 15 problem.
 struct ValueGenerator {
