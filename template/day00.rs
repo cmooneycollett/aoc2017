@@ -39,6 +39,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 00 input file in the format required by the solver functions.
+/// 
 /// Returned value is ###.
 fn process_input_file(filename: &str) -> String {
     // Read contents of problem input file
@@ -47,12 +48,16 @@ fn process_input_file(filename: &str) -> String {
     unimplemented!();
 }
 
-/// Solves AOC 2017 Day 00 Part 1 // ###
+/// Solves AOC 2017 Day 00 Part 1.
+/// 
+/// ###
 fn solve_part1(_input: &String) -> String {
     unimplemented!();
 }
 
-/// Solves AOC 2017 Day 00 Part 2 // ###
+/// Solves AOC 2017 Day 00 Part 2.
+/// 
+/// ###
 fn solve_part2(_input: &String) -> String {
     unimplemented!();
 }

@@ -39,6 +39,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 09 input file in the format required by the solver functions.
+///
 /// Returned value is vector of chars from input file.
 fn process_input_file(filename: &str) -> Vec<char> {
     // Read contents of problem input file
@@ -47,8 +48,9 @@ fn process_input_file(filename: &str) -> Vec<char> {
     raw_input.trim().chars().collect::<Vec<char>>()
 }
 
-/// Solves AOC 2017 Day 09 Part 1 // Calculates the total score for all groups in the character
-/// sequence.
+/// Solves AOC 2017 Day 09 Part 1.
+///
+/// Calculates the total score for all groups in the character sequence.
 fn solve_part1(chars: &[char]) -> u64 {
     let mut depth: u64 = 0;
     let mut score: u64 = 0;
@@ -81,8 +83,10 @@ fn solve_part1(chars: &[char]) -> u64 {
     score
 }
 
-/// Solves AOC 2017 Day 09 Part 2 // Counts the number of non-cancelled characters within the
-/// garbage sections of the character sequence.
+/// Solves AOC 2017 Day 09 Part 2.
+///
+/// Counts the number of non-cancelled characters within the garbage sections of the character
+/// sequence.
 fn solve_part2(chars: &[char]) -> u64 {
     let mut garbage_count: u64 = 0;
     let mut cursor: usize = 0;

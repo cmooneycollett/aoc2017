@@ -39,6 +39,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 05 input file in the format required by the solver functions.
+///
 /// Returned value is vector of integer values given in the lines of the input file.
 fn process_input_file(filename: &str) -> Vec<isize> {
     // Read contents of problem input file
@@ -52,14 +53,17 @@ fn process_input_file(filename: &str) -> Vec<isize> {
         .collect::<Vec<isize>>()
 }
 
-/// Solves AOC 2017 Day 05 Part 1 // Determines the number of steps needed for the cursor to exit
-/// the jump space.
+/// Solves AOC 2017 Day 05 Part 1.
+///
+/// Determines the number of steps needed for the cursor to exit the jump space.
 fn solve_part1(jumps: &[isize]) -> u64 {
     calculate_steps_to_exit_jumpspace(jumps, false)
 }
 
-/// Solves AOC 2017 Day 05 Part 2 // Determines the number of steps needed for the cursor to exit
-/// the jump space, using strange jumps.
+/// Solves AOC 2017 Day 05 Part 2.
+///
+/// Determines the number of steps needed for the cursor to exit the jump space, using strange
+/// jumps.
 fn solve_part2(jumps: &[isize]) -> u64 {
     calculate_steps_to_exit_jumpspace(jumps, true)
 }

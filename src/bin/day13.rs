@@ -51,6 +51,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 13 input file in the format required by the solver functions.
+///
 /// Returned value is HashMap mapping the depth of each firewall to its range.
 fn process_input_file(filename: &str) -> HashMap<u64, u64> {
     // Read contents of problem input file
@@ -63,8 +64,10 @@ fn process_input_file(filename: &str) -> HashMap<u64, u64> {
         .collect::<HashMap<u64, u64>>()
 }
 
-/// Solves AOC 2017 Day 13 Part 1 // Determines the severity score for the trip if there is no delay
-/// before commencement of the firewall transit.
+/// Solves AOC 2017 Day 13 Part 1.
+///
+/// Determines the severity score for the trip if there is no delay before commencement of the
+/// firewall transit.
 fn solve_part1(input: &HashMap<u64, u64>) -> u64 {
     input
         .iter()
@@ -73,8 +76,10 @@ fn solve_part1(input: &HashMap<u64, u64>) -> u64 {
         .sum()
 }
 
-/// Solves AOC 2017 Day 13 Part 2 // Determines the total delay (in picoseconds) prior to
-/// commencement required to complete the firewall transit without being caught.
+/// Solves AOC 2017 Day 13 Part 2.
+///
+/// Determines the total delay (in picoseconds) prior to commencement required to complete the
+/// firewall transit without being caught.
 fn solve_part2(input: &HashMap<u64, u64>) -> u64 {
     let mut delay_ps = 0;
     loop {

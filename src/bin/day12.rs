@@ -51,6 +51,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 12 input file in the format required by the solver functions.
+///
 /// Returned value is HashMap mapping each program to the other it is directly connected to via
 /// pipes.
 fn process_input_file(filename: &str) -> HashMap<u64, Vec<u64>> {
@@ -66,14 +67,16 @@ fn process_input_file(filename: &str) -> HashMap<u64, Vec<u64>> {
     program_conns
 }
 
-/// Solves AOC 2017 Day 12 Part 1 // Determines the number of programs in the group containing the
-/// program '0'.
+/// Solves AOC 2017 Day 12 Part 1.
+///
+/// Determines the number of programs in the group containing the program '0'.
 fn solve_part1(input: &HashMap<u64, Vec<u64>>) -> usize {
     determine_program_group_members(0, input).len()
 }
 
-/// Solves AOC 2017 Day 12 Part 2 // Determines the total number of separate programs groups
-/// specified in the program connections.
+/// Solves AOC 2017 Day 12 Part 2.
+///
+/// Determines the total number of separate programs groups specified in the program connections.
 fn solve_part2(input: &HashMap<u64, Vec<u64>>) -> usize {
     let mut visited: HashSet<u64> = HashSet::new();
     let mut total_program_groups = 0;

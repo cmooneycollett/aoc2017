@@ -46,6 +46,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 06 input file in the format required by the solver functions.
+///
 /// Returned value is vector of values given as whitespace-separated values in the input file.
 fn process_input_file(filename: &str) -> Vec<u64> {
     // Read contents of problem input file
@@ -58,8 +59,10 @@ fn process_input_file(filename: &str) -> Vec<u64> {
         .collect::<Vec<u64>>()
 }
 
-/// Solves AOC 2017 Day 06 Part 1 // Determines how many redistribution cycles must be completed
-/// before a configuration is produced that has already been observed.
+/// Solves AOC 2017 Day 06 Part 1.
+///
+/// Determines how many redistribution cycles must be completed before a configuration is produced
+/// that has already been observed.
 fn solve_part1(banks: &[u64]) -> u64 {
     match find_repeated_banks_arrangement_steps(banks) {
         Ok((steps, _)) => steps,
@@ -67,8 +70,10 @@ fn solve_part1(banks: &[u64]) -> u64 {
     }
 }
 
-/// Solves AOC 2017 Day 06 Part 2 // Determines the length of the cycle in steps between the
-/// repeated arrangments of the banks. A single redistribution cycle is conducted on each step.
+/// Solves AOC 2017 Day 06 Part 2.
+///
+/// Determines the length of the cycle in steps between the repeated arrangments of the banks. A
+/// single redistribution cycle is conducted on each step.
 fn solve_part2(banks: &[u64]) -> u64 {
     match find_repeated_banks_arrangement_steps(banks) {
         Ok((_, cycle_steps)) => cycle_steps,

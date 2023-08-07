@@ -41,6 +41,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 02 input file in the format required by the solver functions.
+///
 /// Returned value is vector of vectors containing values given in the lines of the input file.
 fn process_input_file(filename: &str) -> Vec<Vec<u64>> {
     // Read contents of problem input file
@@ -58,8 +59,10 @@ fn process_input_file(filename: &str) -> Vec<Vec<u64>> {
         .collect::<Vec<Vec<u64>>>()
 }
 
-/// Solves AOC 2017 Day 02 Part 1 // Determines the checksum of the sheet by determining the sum of
-/// the difference between the minimum and maximum values for each row.
+/// Solves AOC 2017 Day 02 Part 1.
+///
+/// Determines the checksum of the sheet by determining the sum of the difference between the
+/// minimum and maximum values for each row.
 fn solve_part1(sheet: &[Vec<u64>]) -> u64 {
     sheet
         .iter()
@@ -67,8 +70,10 @@ fn solve_part1(sheet: &[Vec<u64>]) -> u64 {
         .sum()
 }
 
-/// Solves AOC 2017 Day 02 Part 2 // Determines the checksum of the sheet by finding the sum of the
-/// division result of the two values from each row that are evenly divisible.
+/// Solves AOC 2017 Day 02 Part 2.
+///
+/// Determines the checksum of the sheet by finding the sum of the division result of the two values
+/// from each row that are evenly divisible.
 fn solve_part2(sheet: &[Vec<u64>]) -> u64 {
     sheet
         .iter()

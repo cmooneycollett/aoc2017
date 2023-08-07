@@ -41,6 +41,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 10 input file in the format required by the solver functions.
+///
 /// Returned value is string contained in the input file.
 fn process_input_file(filename: &str) -> String {
     // Read contents of problem input file
@@ -49,9 +50,10 @@ fn process_input_file(filename: &str) -> String {
     raw_input.trim().to_string()
 }
 
-/// Solves AOC 2017 Day 10 Part 1 // Calculates the sparse hash of the numbers 0-255 inclusive using
-/// the comma-separated values in the input string, and returns the product of the first two values
-/// of the sparse hash.
+/// Solves AOC 2017 Day 10 Part 1.
+///
+/// Calculates the sparse hash of the numbers 0-255 inclusive using the comma-separated values in
+/// the input string, and returns the product of the first two values of the sparse hash.
 fn solve_part1(input_string: &str) -> u64 {
     let lengths = input_string
         .split(',')
@@ -62,7 +64,9 @@ fn solve_part1(input_string: &str) -> u64 {
     strand[0] * strand[1]
 }
 
-/// Solves AOC 2017 Day 10 Part 2 // Calculates the knot hash of the given string.
+/// Solves AOC 2017 Day 10 Part 2.
+///
+/// Calculates the knot hash of the given string.
 fn solve_part2(input_string: &str) -> String {
     calculate_knot_hash(input_string)
 }

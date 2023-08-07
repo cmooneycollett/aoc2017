@@ -73,6 +73,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 11 input file in the format required by the solver functions.
+///
 /// Returned value is vector of [`HexGridDirection`] variants based on the comma-separated strings
 /// extracted from the input file.
 fn process_input_file(filename: &str) -> Vec<HexGridDirection> {
@@ -86,8 +87,10 @@ fn process_input_file(filename: &str) -> Vec<HexGridDirection> {
         .collect::<Vec<HexGridDirection>>()
 }
 
-/// Solves AOC 2017 Day 11 Part 1 // Determine the number of steps required to reach the final
-/// location after processing all of the hexagon grid moves.
+/// Solves AOC 2017 Day 11 Part 1.
+///
+/// Determine the number of steps required to reach the final location after processing all of the
+/// hexagon grid moves.
 fn solve_part1(input: &[HexGridDirection]) -> u64 {
     let mut loc = Point3D::new(0, 0, 0);
     for dirn in input {
@@ -96,8 +99,10 @@ fn solve_part1(input: &[HexGridDirection]) -> u64 {
     get_steps_from_origin(&loc)
 }
 
-/// Solves AOC 2017 Day 11 Part 2 // Determines the maximum number of steps from the origin that the
-/// child process reaches during its journey.
+/// Solves AOC 2017 Day 11 Part 2.
+///
+/// Determines the maximum number of steps from the origin that the child process reaches during its
+/// journey.
 fn solve_part2(input: &[HexGridDirection]) -> u64 {
     let mut loc = Point3D::new(0, 0, 0);
     let mut maximum_distance = 0;

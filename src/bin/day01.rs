@@ -39,7 +39,8 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 01 input file in the format required by the solver functions.
-/// Returned value is vector of digits given in the input file
+///
+/// Returned value is vector of digits given in the input file.
 fn process_input_file(filename: &str) -> Vec<u32> {
     // Read contents of problem input file
     let raw_input = fs::read_to_string(filename).unwrap();
@@ -51,8 +52,9 @@ fn process_input_file(filename: &str) -> Vec<u32> {
         .collect::<Vec<u32>>()
 }
 
-/// Solves AOC 2017 Day 01 Part 1 // Determines the sum of all digits that match the next digit in
-/// the sequence (circular).
+/// Solves AOC 2017 Day 01 Part 1.
+///
+/// Determines the sum of all digits that match the next digit in the sequence (circular).
 fn solve_part1(digits: &[u32]) -> u32 {
     digits
         .iter()
@@ -62,8 +64,9 @@ fn solve_part1(digits: &[u32]) -> u32 {
         .sum()
 }
 
-/// Solves AOC 2017 Day 01 Part 2 // Determines the sum of all digits that match the digit half-way
-/// around the sequence (circular).
+/// Solves AOC 2017 Day 01 Part 2.
+///
+/// Determines the sum of all digits that match the digit half-way around the sequence (circular).
 fn solve_part2(digits: &[u32]) -> u32 {
     digits
         .iter()

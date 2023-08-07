@@ -96,6 +96,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 15 input file in the format required by the solver functions.
+///
 /// Returned value is a tuple containing the start values for the A and B generators.
 fn process_input_file(filename: &str) -> (u64, u64) {
     // Read contents of problem input file
@@ -104,8 +105,10 @@ fn process_input_file(filename: &str) -> (u64, u64) {
     parse_input_string(&raw_input).unwrap()
 }
 
-/// Solves AOC 2017 Day 15 Part 1 // Determines the number of matching values from the A and B
-/// generators after 40 million pairs of values have been generated.
+/// Solves AOC 2017 Day 15 Part 1.
+///
+/// Determines the number of matching values from the A and B generators after 40 million pairs of
+/// values have been generated.
 fn solve_part1(input: &(u64, u64)) -> usize {
     let (gen_a_start, gen_b_start) = *input;
     let mut gen_a = ValueGenerator::new(gen_a_start, GEN_A_FACTOR, GEN_MODULUS, |_| true);
@@ -113,9 +116,10 @@ fn solve_part1(input: &(u64, u64)) -> usize {
     count_matching_value_pairs(&mut gen_a, &mut gen_b, PART1_ROUNDS)
 }
 
-/// Solves AOC 2017 Day 15 Part 2 // Determines the number of matching values from the A and B
-/// generators after 5 million pairs, with each generator using a non-trivial value-checking
-/// function.
+/// Solves AOC 2017 Day 15 Part 2.
+///
+/// Determines the number of matching values from the A and B generators after 5 million pairs, with
+/// each generator using a non-trivial value-checking function.
 fn solve_part2(input: &(u64, u64)) -> usize {
     let (gen_a_start, gen_b_start) = *input;
     let mut gen_a = ValueGenerator::new(gen_a_start, GEN_A_FACTOR, GEN_MODULUS, |v| v % 4 == 0);

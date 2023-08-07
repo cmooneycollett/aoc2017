@@ -134,6 +134,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 08 input file in the format required by the solver functions.
+///
 /// Returned value is vector of Instructions parsed from the lines of the input file.
 fn process_input_file(filename: &str) -> Vec<Instruction> {
     // Read contents of problem input file
@@ -147,8 +148,9 @@ fn process_input_file(filename: &str) -> Vec<Instruction> {
         .collect::<Vec<Instruction>>()
 }
 
-/// Solves AOC 2017 Day 08 Part 1 // Determines the maximum register value after all instructions
-/// have been processed.
+/// Solves AOC 2017 Day 08 Part 1.
+///
+/// Determines the maximum register value after all instructions have been processed.
 fn solve_part1(instructions: &[Instruction]) -> i64 {
     if let (Some(max_at_end), _) = process_instructions(instructions) {
         return max_at_end;
@@ -156,8 +158,9 @@ fn solve_part1(instructions: &[Instruction]) -> i64 {
     panic!("Failed to find maximum register value at end of instruction processing!");
 }
 
-/// Solves AOC 2017 Day 08 Part 2 // Determines the maximum register value at any point during the
-/// processing of the instructions.
+/// Solves AOC 2017 Day 08 Part 2.
+///
+/// Determines the maximum register value at any point during the processing of the instructions.
 fn solve_part2(instructions: &[Instruction]) -> i64 {
     if let (_, Some(max_during)) = process_instructions(instructions) {
         return max_during;

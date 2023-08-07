@@ -53,6 +53,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 07 input file in the format required by the solver functions.
+///
 /// Returned value is tuple containing: hashmap mapping program name to weight as given in input
 /// file, and hashmap mapping program to collection of other program names sitting on top of the
 /// program.
@@ -97,7 +98,9 @@ fn process_input_file(filename: &str) -> ProblemInput {
     (program_weights, program_children)
 }
 
-/// Solves AOC 2017 Day 07 Part 1 // Determines the name of the program at the bottom of the tower.
+/// Solves AOC 2017 Day 07 Part 1.
+///
+/// Determines the name of the program at the bottom of the tower.
 fn solve_part1(input: &ProblemInput) -> String {
     let (_, program_children) = input;
     match find_bottom_program_name(program_children) {
@@ -106,8 +109,10 @@ fn solve_part1(input: &ProblemInput) -> String {
     }
 }
 
-/// Solves AOC 2017 Day 07 Part 2 // Given that exactly one program is the wrong weight, finds the
-/// weight that it would need to be to balance the entire program tower.
+/// Solves AOC 2017 Day 07 Part 2.
+///
+/// Given that exactly one program is the wrong weight, finds the weight that it would need to be to
+/// balance the entire program tower.
 fn solve_part2(input: &ProblemInput) -> u64 {
     let (program_weights, parent_to_children) = input;
     match find_unbalanced_program_corrected_weight(program_weights, parent_to_children) {

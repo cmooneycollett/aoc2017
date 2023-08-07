@@ -49,14 +49,17 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 14 input file in the format required by the solver functions.
+///
 /// Returned value is string given in the input file.
 fn process_input_file(filename: &str) -> String {
     // Read contents of problem input file
     fs::read_to_string(filename).unwrap().trim().to_string()
 }
 
-/// Solves AOC 2017 Day 14 Part 1 // Determines the number of squares used in the disk grid, with
-/// rows based on knot hash calculations.
+/// Solves AOC 2017 Day 14 Part 1.
+///
+/// Determines the number of squares used in the disk grid, with rows based on knot hash
+/// calculations.
 fn solve_part1(input: &str) -> usize {
     (0..=127)
         .map(|v| calculate_knot_hash(&format!("{input}-{v}")))
@@ -65,7 +68,9 @@ fn solve_part1(input: &str) -> usize {
         .sum()
 }
 
-/// Solves AOC 2017 Day 14 Part 2 // Determines the number of regions present in the disk grid.
+/// Solves AOC 2017 Day 14 Part 2.
+///
+/// Determines the number of regions present in the disk grid.
 fn solve_part2(input: &str) -> usize {
     // Generate disk grid (128x128 grid)
     let disk_grid: Vec<Vec<char>> = (0..=127)

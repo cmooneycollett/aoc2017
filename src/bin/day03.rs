@@ -42,6 +42,7 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 03 input file in the format required by the solver functions.
+///
 /// Returned value is value given in the input file.
 fn process_input_file(filename: &str) -> u64 {
     // Read contents of problem input file
@@ -50,15 +51,18 @@ fn process_input_file(filename: &str) -> u64 {
     raw_input.trim().parse::<u64>().unwrap()
 }
 
-/// Solves AOC 2017 Day 03 Part 1 // Determines the number of steps needed to carry the data from
-/// the target square to the access port in the centre of the simple spiral.
+/// Solves AOC 2017 Day 03 Part 1.
+///
+/// Determines the number of steps needed to carry the data from the target square to the access
+/// port in the centre of the simple spiral.
 fn solve_part1(target: &u64) -> u64 {
     let (_value, loc) = generate_simple_spiral(*target);
     loc.get_manhattan_distance(&Point2D::new(0, 0))
 }
 
-/// Solves AOC 2017 Day 03 Part 2 // Determines the first value over the target value that is
-/// generated in the complex spiral.
+/// Solves AOC 2017 Day 03 Part 2.
+///
+/// Determines the first value over the target value that is generated in the complex spiral.
 fn solve_part2(target: &u64) -> u64 {
     let (value, _loc) = generate_complex_spiral(*target);
     value
