@@ -10,6 +10,8 @@ const PROBLEM_INPUT_FILE: &str = "./input/day16.txt";
 const PROBLEM_DAY: u64 = 16;
 /// The programs start out in this order at the beginning of each problem part.
 const PROGRAM_STARTING_ORDER: &str = "abcdefghijklmnop";
+/// Total number of rounds needed for problem part 2.
+const PART2_ROUNDS: usize = 1_000_000_000;
 
 /// Custom error type indicating that the parsing of a line from the input file has failed.
 #[derive(Debug)]
@@ -81,16 +83,32 @@ fn process_input_file(filename: &str) -> Vec<DanceMove> {
 ///
 /// Determines the program order after all dance moves have been executed.
 fn solve_part1(dance_moves: &[DanceMove]) -> String {
-    let mut programs = PROGRAM_STARTING_ORDER.chars().collect::<VecDeque<char>>();
-    execute_dance_moves(dance_moves, &mut programs);
-    programs.iter().collect::<String>()
+    execute_dance_moves(dance_moves, PROGRAM_STARTING_ORDER)
 }
 
 /// Solves AOC 2017 Day 16 Part 2.
 ///
-/// ###
-fn solve_part2(_dance_moves: &[DanceMove]) -> String {
-    unimplemented!();
+/// Determines the program order after one billion rounds of dance moves are executed.
+fn solve_part2(dance_moves: &[DanceMove]) -> String {
+    // Conduct dance move rounds until the order repeats
+    let mut orders: Vec<String> = vec![execute_dance_moves(dance_moves, PROGRAM_STARTING_ORDER)];
+    loop {
+        let next_order = execute_dance_moves(dance_moves, orders.last().unwrap());
+        if next_order == orders[0] {
+            break;
+        }
+        orders.push(next_order);
+    }
+    // Get remainder index to determine order after one billion rounds of dance moves
+    let i = {
+        let remainder = PART2_ROUNDS % orders.len();
+        if remainder == 0 {
+            orders.len() - 1
+        } else {
+            remainder - 1
+        }
+    };
+    orders[i].to_string()
 }
 
 /// Parses the content of the input file to generate the data structure needed as input to the
@@ -123,17 +141,19 @@ fn parse_input_file_content(s: &str) -> Result<Vec<DanceMove>, InputLineParseErr
 }
 
 /// Executes a single round of dance moves, reordering the programs as required.
-fn execute_dance_moves(dance_moves: &[DanceMove], programs: &mut VecDeque<char>) {
+fn execute_dance_moves(dance_moves: &[DanceMove], program_starting_order: &str) -> String {
+    let mut programs = program_starting_order.chars().collect::<VecDeque<char>>();
     for dance in dance_moves {
         match dance {
             DanceMove::Spin { steps } => programs.rotate_right(*steps),
             DanceMove::Exchange { a, b } => programs.swap(*a, *b),
             DanceMove::Partner { a, b } => {
-                let (index_a, index_b) = find_program_indices(a, b, programs).unwrap();
+                let (index_a, index_b) = find_program_indices(a, b, &programs).unwrap();
                 programs.swap(index_a, index_b);
             }
         }
     }
+    programs.iter().collect::<String>()
 }
 
 /// Finds the index of the A and B programs within the collection of programs.
@@ -155,8 +175,9 @@ fn find_program_indices(
             index_b = Some(index);
         }
         // Check if the index of both programs has been found
-        if index_a.is_some() && index_b.is_some() {
-            return Ok((index_a.unwrap(), index_b.unwrap()));
+        match index_a.is_some() && index_b.is_some() {
+            true => return Ok((index_a.unwrap(), index_b.unwrap())),
+            false => (),
         }
     }
     Err(ProgramIndexLookupError)
