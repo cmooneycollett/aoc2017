@@ -5,7 +5,10 @@ const PROBLEM_NAME: &str = "Spinlock";
 const PROBLEM_INPUT_FILE: &str = "./input/day17.txt";
 const PROBLEM_DAY: u64 = 17;
 
-const PART1_CAP: usize = 2017;
+/// Number of values inserted into the spinlock beyond the start state in Day 17 Part 1.
+const PART1_CAP: usize = 2_017;
+/// Number of values inserted into the spinlock beyond the start state in Day 17 Part 2.
+const PART2_CAP: usize = 50_000_000;
 
 /// Processes the AOC 2017 Day 17 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
@@ -52,8 +55,8 @@ fn process_input_file(filename: &str) -> usize {
 
 /// Solves AOC 2017 Day 17 Part 1.
 ///
-/// Identifies the value following 2017 in the spinlock circular buffer after 2017 insertions have
-/// been completed.
+/// Identifies the value following 2017 in the spinlock circular buffer after 2017 values have been
+/// inserted.
 fn solve_part1(steps: &usize) -> usize {
     let mut spinlock: Vec<usize> = vec![0];
     let mut cursor: usize = 0;
@@ -68,9 +71,23 @@ fn solve_part1(steps: &usize) -> usize {
 
 /// Solves AOC 2017 Day 17 Part 2.
 ///
-/// ###
-fn solve_part2(_cap: &usize) -> usize {
-    unimplemented!();
+/// Identifies the value following 0 in the spinlock circular buffer after 50 million values have
+/// been inserted.
+fn solve_part2(steps: &usize) -> usize {
+    // Spinlock length matters, but not all specific values (we are locking at fixed index for 0)
+    let mut cursor: usize = 0;
+    let mut spinlock_len: usize = 1;
+    let mut code_after_zero: usize = 0;
+    for code in 1..=PART2_CAP {
+        // Check if the current code will be inserted after the zero value (remains at index 0)
+        if cursor == 0 {
+            code_after_zero = code;
+        }
+        // Simulate inserting the current code into the spinlock
+        spinlock_len += 1;
+        cursor = (cursor + 1 + steps) % spinlock_len;
+    }
+    code_after_zero
 }
 
 #[cfg(test)]
