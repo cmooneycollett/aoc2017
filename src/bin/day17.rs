@@ -5,6 +5,8 @@ const PROBLEM_NAME: &str = "Spinlock";
 const PROBLEM_INPUT_FILE: &str = "./input/day17.txt";
 const PROBLEM_DAY: u64 = 17;
 
+const PART1_CAP: usize = 2017;
+
 /// Processes the AOC 2017 Day 17 input file and solves both parts of the problem. Solutions are
 /// printed to stdout.
 pub fn main() {
@@ -39,26 +41,35 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 17 input file in the format required by the solver functions.
-/// 
-/// Returned value is ###.
-fn process_input_file(filename: &str) -> u64 {
+///
+/// Returned value is positive integer value given in the input file.
+fn process_input_file(filename: &str) -> usize {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input.trim().parse::<usize>().unwrap()
 }
 
 /// Solves AOC 2017 Day 17 Part 1.
-/// 
-/// ###
-fn solve_part1(_input: &u64) -> u64 {
-    unimplemented!();
+///
+/// Identifies the value following 2017 in the spinlock circular buffer after 2017 insertions have
+/// been completed.
+fn solve_part1(steps: &usize) -> usize {
+    let mut spinlock: Vec<usize> = vec![0];
+    let mut cursor: usize = 0;
+    for code in 1..=PART1_CAP {
+        spinlock.insert(cursor + 1, code);
+        cursor = (cursor + 1 + steps) % spinlock.len();
+    }
+    // Find the value after 2017 in the completed spinlock circular buffer
+    let i_result = (spinlock.iter().position(|&v| v == PART1_CAP).unwrap() + 1) % spinlock.len();
+    spinlock[i_result]
 }
 
 /// Solves AOC 2017 Day 17 Part 2.
-/// 
+///
 /// ###
-fn solve_part2(_input: &u64) -> u64 {
+fn solve_part2(_cap: &usize) -> usize {
     unimplemented!();
 }
 
