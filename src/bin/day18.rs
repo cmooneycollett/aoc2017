@@ -1,5 +1,7 @@
-use std::fs;
 use std::time::Instant;
+use std::{fs, str::FromStr};
+
+use aoc2017::utils::machines::soundcomputer::{Instruction, SoundComputer};
 
 const PROBLEM_NAME: &str = "Duet";
 const PROBLEM_INPUT_FILE: &str = "./input/day18.txt";
@@ -39,26 +41,33 @@ pub fn main() {
 }
 
 /// Processes the AOC 2017 Day 18 input file in the format required by the solver functions.
-/// 
-/// Returned value is ###.
-fn process_input_file(filename: &str) -> String {
+///
+/// Returned value is vector of [`Instruction`] given by the lines of the input file.
+fn process_input_file(filename: &str) -> Vec<Instruction> {
     // Read contents of problem input file
-    let _raw_input = fs::read_to_string(filename).unwrap();
+    let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    unimplemented!();
+    raw_input
+        .trim()
+        .lines()
+        .map(|line| Instruction::from_str(line).unwrap())
+        .collect::<Vec<Instruction>>()
 }
 
 /// Solves AOC 2017 Day 18 Part 1.
-/// 
-/// ###
-fn solve_part1(_input: &String) -> u64 {
-    unimplemented!();
+///
+/// Determines the value of the recovered frequency the first time a "rcv" instruction is executed
+/// with a non-zero value.
+fn solve_part1(instructions: &[Instruction]) -> i64 {
+    let mut sound_computer = SoundComputer::new(instructions, false);
+    sound_computer.execute();
+    sound_computer.get_last_sent_sound().unwrap()
 }
 
 /// Solves AOC 2017 Day 18 Part 2.
-/// 
+///
 /// ###
-fn solve_part2(_input: &String) -> u64 {
+fn solve_part2(_instructions: &[Instruction]) -> u64 {
     unimplemented!();
 }
 
