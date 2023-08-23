@@ -66,9 +66,38 @@ fn solve_part1(instructions: &[Instruction]) -> i64 {
 
 /// Solves AOC 2017 Day 18 Part 2.
 ///
-/// ###
-fn solve_part2(_instructions: &[Instruction]) -> u64 {
-    unimplemented!();
+/// Determines the total number of sounds sent by program 1, when the sound computer is operated as
+/// two machines (0 and 1) running in duet mode.
+fn solve_part2(instructions: &[Instruction]) -> u64 {
+    let mut comp0 = SoundComputer::new(instructions, true);
+    let mut comp1 = SoundComputer::new(instructions, true);
+    comp1.update_register(&'p', 1).unwrap(); // Set program ID for program 1
+    loop {
+        // Check for halting conditions
+        if comp0.is_halted() && comp1.is_halted() {
+            break;
+        }
+        if comp0.is_halted() && comp1.is_awaiting_input() {
+            break;
+        }
+        if comp0.is_awaiting_input() && comp1.is_awaiting_input() {
+            break;
+        }
+        // Execute programs
+        comp0.execute();
+        comp1.execute();
+        // Take sounds sent from program 1 and provide to program 0
+        if comp0.is_awaiting_input() {
+            let sounds = comp1.take_sent_sounds();
+            comp0.receive_sounds(&sounds);
+        }
+        // Take sounds sent from program 0 and provide to program 1
+        if comp1.is_awaiting_input() {
+            let sounds = comp0.take_sent_sounds();
+            comp1.receive_sounds(&sounds);
+        }
+    }
+    comp1.get_total_sounds_sent()
 }
 
 #[cfg(test)]

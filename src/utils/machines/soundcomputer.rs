@@ -12,7 +12,7 @@ lazy_static! {
     static ref ADD_REGEX: Regex = Regex::new(r"^add ([a-z]) ([a-z]|-?\d+)$").unwrap();
     static ref MUL_REGEX: Regex = Regex::new(r"^mul ([a-z]) ([a-z]|-?\d+)$").unwrap();
     static ref MOD_REGEX: Regex = Regex::new(r"^mod ([a-z]) ([a-z]|-?\d+)$").unwrap();
-    static ref RCV_REGEX: Regex = Regex::new(r"^rcv ([a-z]|-?\d+)$").unwrap();
+    static ref RCV_REGEX: Regex = Regex::new(r"^rcv ([a-z])$").unwrap();
     static ref JGZ_REGEX: Regex = Regex::new(r"^jgz ([a-z]|-?\d+) ([a-z]|-?\d+)$").unwrap();
 }
 
@@ -43,7 +43,7 @@ pub enum Instruction {
     /// Modulus
     Mod { reg: char, arg: InstructionArgument },
     /// Recover frequency / receive (duet mode)
-    Rcv { arg: InstructionArgument },
+    Rcv { reg: char },
     /// Jump if greater than zero
     Jgz {
         arg1: InstructionArgument,
@@ -75,8 +75,8 @@ impl FromStr for Instruction {
             let arg = InstructionArgument::from_str(&caps[2]).unwrap();
             return Ok(Instruction::Mod { reg, arg });
         } else if let Ok(Some(caps)) = RCV_REGEX.captures(s) {
-            let arg = InstructionArgument::from_str(&caps[1]).unwrap();
-            return Ok(Instruction::Rcv { arg });
+            let reg = caps[1].parse::<char>().unwrap();
+            return Ok(Instruction::Rcv { reg });
         } else if let Ok(Some(caps)) = JGZ_REGEX.captures(s) {
             let arg1 = InstructionArgument::from_str(&caps[1]).unwrap();
             let arg2 = InstructionArgument::from_str(&caps[2]).unwrap();
@@ -92,18 +92,18 @@ impl FromStr for Instruction {
 /// read from the register of a [`SoundComputer`].
 #[derive(Copy, Clone)]
 pub enum InstructionArgument {
-    Value { value: i64 },
-    Register { register: char },
+    Value { val: i64 },
+    Register { reg: char },
 }
 
 impl FromStr for InstructionArgument {
     type Err = InstructionParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Ok(value) = s.parse::<i64>() {
-            return Ok(InstructionArgument::Value { value });
-        } else if let Ok(register) = s.parse::<char>() {
-            return Ok(InstructionArgument::Register { register });
+        if let Ok(val) = s.parse::<i64>() {
+            return Ok(InstructionArgument::Value { val });
+        } else if let Ok(reg) = s.parse::<char>() {
+            return Ok(InstructionArgument::Register { reg });
         }
         Err(InstructionParseError)
     }
@@ -111,6 +111,8 @@ impl FromStr for InstructionArgument {
 
 /// Represents a sound computer that can execute instructions (see [`Instruction`]) in either
 /// single-mode or duet-mode.
+///
+/// The sound computer has 26 registers (labelled 'a' to 'z') that are initialised to 0.
 pub struct SoundComputer {
     instructions: Vec<Instruction>,
     registers: HashMap<char, i64>,
@@ -143,7 +145,7 @@ impl SoundComputer {
     /// Executes instructions held by the [`SoundComputer`] until execution is halted or input is
     /// required.
     pub fn execute(&mut self) {
-        if self.halted {
+        if self.halted || self.awaiting_input {
             return;
         }
         // Execute instructions while the program counter remains within the instruction space
@@ -161,7 +163,7 @@ impl SoundComputer {
                 }
                 Instruction::Set { reg, arg } => {
                     let value = self.decode_instruction_argument(arg).unwrap();
-                    self.registers.insert(reg, value);
+                    self.update_register(&reg, value).unwrap();
                 }
                 Instruction::Add { reg, arg } => {
                     let value = self.decode_instruction_argument(arg).unwrap();
@@ -175,27 +177,30 @@ impl SoundComputer {
                     let value = self.decode_instruction_argument(arg).unwrap();
                     *self.registers.get_mut(&reg).unwrap() %= value;
                 }
-                Instruction::Rcv { arg } => {
-                    let value = self.decode_instruction_argument(arg).unwrap();
-                    if !self.duet_mode {
-                        if value != 0 {
+                Instruction::Rcv { reg } => {
+                    let value = self.read_register(&reg).unwrap();
+                    if !self.duet_mode && value != 0 {
+                        return;
+                    } else {
+                        if self.sounds_received.is_empty() {
+                            self.awaiting_input = true;
                             return;
                         }
-                    } else if self.sounds_received.is_empty() {
-                        self.awaiting_input = true;
-                        return;
+                        let sound_received = self.sounds_received.pop_front().unwrap();
+                        self.update_register(&reg, sound_received).unwrap();
                     }
                 }
                 Instruction::Jgz { arg1, arg2 } => {
                     let check_value = self.decode_instruction_argument(arg1).unwrap();
                     let jmp = self.decode_instruction_argument(arg2).unwrap();
-                    if check_value != 0 {
+                    if check_value > 0 {
                         match jmp.is_negative() {
                             true => {
                                 // Check if the jump would move the pc left of instruction space
                                 let jump_value = usize::try_from(jmp.unsigned_abs()).unwrap();
                                 if jump_value > self.pc {
-                                    break;
+                                    self.halted = true;
+                                    return;
                                 }
                                 self.pc -= jump_value;
                             }
@@ -217,11 +222,11 @@ impl SoundComputer {
     /// Returns the value held in the specified register.
     ///
     /// If the register does not exist, a [`RegisterReadError`] is returned.
-    pub fn read_register(&self, register: char) -> Result<i64, RegisterReadError> {
-        if !self.registers.contains_key(&register) {
+    pub fn read_register(&self, register: &char) -> Result<i64, RegisterReadError> {
+        if !self.registers.contains_key(register) {
             return Err(RegisterReadError);
         }
-        Ok(*self.registers.get(&register).unwrap())
+        Ok(*self.registers.get(register).unwrap())
     }
 
     /// Updates the value held in the specified register.
@@ -229,13 +234,13 @@ impl SoundComputer {
     /// If the register does not exist, a [`RegisterWriteError`] is returned.
     pub fn update_register(
         &mut self,
-        register: char,
+        register: &char,
         value: i64,
     ) -> Result<(), RegisterWriteError> {
-        if !self.registers.contains_key(&register) {
+        if !self.registers.contains_key(register) {
             return Err(RegisterWriteError);
         }
-        self.registers.insert(register, value);
+        self.registers.insert(*register, value);
         Ok(())
     }
 
@@ -248,7 +253,9 @@ impl SoundComputer {
 
     /// Adds the sounds to the receive buffer.
     pub fn receive_sounds(&mut self, sounds: &[i64]) {
-        self.sounds_received.extend(sounds.iter());
+        for sound in sounds {
+            self.sounds_received.push_back(*sound);
+        }
         if !self.sounds_received.is_empty() {
             self.awaiting_input = false;
         }
@@ -269,6 +276,11 @@ impl SoundComputer {
         self.halted
     }
 
+    /// Gets the total number of sounds sent by the [`SoundComputer`].
+    pub fn get_total_sounds_sent(&self) -> u64 {
+        self.total_sounds_sent
+    }
+
     /// Decodes an [`InstructionArgument`] variant by returning its integer value or the value held
     /// in the designated register.
     ///
@@ -278,8 +290,8 @@ impl SoundComputer {
         arg: InstructionArgument,
     ) -> Result<i64, RegisterReadError> {
         match arg {
-            InstructionArgument::Value { value } => Ok(value),
-            InstructionArgument::Register { register } => self.read_register(register),
+            InstructionArgument::Value { val: value } => Ok(value),
+            InstructionArgument::Register { reg: register } => self.read_register(&register),
         }
     }
 }
