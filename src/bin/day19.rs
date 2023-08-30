@@ -142,9 +142,11 @@ fn solve_part1(track_map: &HashMap<Point2D, TrackSegment>) -> String {
 
 /// Solves AOC 2017 Day 19 Part 2.
 ///
-/// ###
-fn solve_part2(_input: &HashMap<Point2D, TrackSegment>) -> usize {
-    unimplemented!();
+/// Determines the number of steps required for the packet to complete its navigation through the
+/// track segments.
+fn solve_part2(track_map: &HashMap<Point2D, TrackSegment>) -> usize {
+    let (_, steps) = navigate_track(track_map);
+    steps
 }
 
 /// Navigates the packet through the track, collecting letters and counting steps along the way.
@@ -156,7 +158,8 @@ fn navigate_track(track_map: &HashMap<Point2D, TrackSegment>) -> (String, usize)
     let mut dirn = CardinalDirection::South;
     let mut loc = *track_map.keys().find(|loc| loc.y() == 0).unwrap();
     let mut letters = String::new();
-    let mut steps = 0;
+    // Packet takes a step to enter the starting location
+    let mut steps = 1;
     // Continue moving until there is no valid move next
     loop {
         // Move in current direction
