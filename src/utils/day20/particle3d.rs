@@ -7,9 +7,9 @@ pub struct Particle3D {
     loc: Point3D,
     vel: Point3D,
     acc: Point3D,
-    loc_abs: f64,
-    vel_abs: f64,
-    acc_abs: f64,
+    loc_manh: u64,
+    vel_manh: u64,
+    acc_manh: u64,
 }
 
 impl Particle3D {
@@ -18,9 +18,9 @@ impl Particle3D {
             loc: *loc,
             vel: *vel,
             acc: *acc,
-            loc_abs: loc.get_absolute_value(),
-            vel_abs: vel.get_absolute_value(),
-            acc_abs: acc.get_absolute_value(),
+            loc_manh: loc.get_manhattan_distance_origin(),
+            vel_manh: vel.get_manhattan_distance_origin(),
+            acc_manh: acc.get_manhattan_distance_origin(),
         }
     }
 
@@ -31,21 +31,26 @@ impl Particle3D {
         // Update location by velocity
         self.loc.shift(self.vel.x(), self.vel.y(), self.vel.z());
     }
+
+    /// Returns the value of the "loc" field.
+    pub fn loc(&self) -> &Point3D {
+        &self.loc
+    }
 }
 
 impl PartialOrd for Particle3D {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         // Compare absolute acceleration
-        match self.acc_abs.partial_cmp(&other.acc_abs) {
+        match self.acc_manh.partial_cmp(&other.acc_manh) {
             Some(std::cmp::Ordering::Equal) => {}
             ord => return ord,
         }
         // Compare absolute velocity
-        match self.vel_abs.partial_cmp(&other.vel_abs) {
+        match self.vel_manh.partial_cmp(&other.vel_manh) {
             Some(core::cmp::Ordering::Equal) => {}
             ord => return ord,
         }
         // Compare absolute location
-        self.loc_abs.partial_cmp(&other.loc_abs)
+        self.loc_manh.partial_cmp(&other.loc_manh)
     }
 }

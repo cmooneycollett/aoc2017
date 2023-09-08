@@ -1,12 +1,15 @@
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::fs;
 use std::time::Instant;
 
-use aoc_utils::cartography::Point3D;
 use fancy_regex::Regex;
+use itertools::Itertools;
 use lazy_static::lazy_static;
 
 use aoc2017::utils::day20::Particle3D;
 use aoc2017::utils::error::InputFileParseError;
+use aoc_utils::cartography::Point3D;
 
 const PROBLEM_NAME: &str = "Particle Swarm";
 const PROBLEM_INPUT_FILE: &str = "./input/day20.txt";
@@ -113,9 +116,82 @@ fn solve_part1(particles: &[Particle3D]) -> usize {
 
 /// Solves AOC 2017 Day 20 Part 2.
 ///
-/// ###
-fn solve_part2(_input: &[Particle3D]) -> usize {
-    unimplemented!();
+/// Determines the number of particles remaining after no more collisions are possible.
+fn solve_part2(particles: &[Particle3D]) -> usize {
+    let mut particles: HashMap<usize, Particle3D> = particles
+        .iter()
+        .copied()
+        .enumerate()
+        .collect::<HashMap<usize, Particle3D>>();
+    // Remove collided particles
+    remove_collided_particles(&mut particles);
+    // Calculate Manhattan distance between each pair of particles
+    let mut old_pair_dist = calculate_pair_manhattan_distances(&particles);
+    // Keep simulating until no more collisions are possible
+    loop {
+        // Move all particles
+        for p in particles.values_mut() {
+            p.tick();
+        }
+        // Remove collided particles
+        remove_collided_particles(&mut particles);
+        // Calculate new pair distances
+        let new_pair_dist = calculate_pair_manhattan_distances(&particles);
+        // Check for stopping condition: all pair distances have increased
+        let mut more_collisions_possible = false;
+        for (i_pair, dist) in new_pair_dist.iter() {
+            let old_dist = old_pair_dist.get(i_pair).unwrap();
+            if dist < old_dist {
+                more_collisions_possible = true;
+                break;
+            }
+        }
+        if !more_collisions_possible {
+            break;
+        }
+        // New pair distances becomes old
+        old_pair_dist = new_pair_dist;
+    }
+    // Return the number of particles remaining
+    particles.len()
+}
+
+/// Removes particles that have collided.
+fn remove_collided_particles(particles: &mut HashMap<usize, Particle3D>) {
+    // Determine number of particles at each unique location occupied
+    let mut locations: HashMap<Point3D, usize> = HashMap::new();
+    for p in particles.values() {
+        if let Entry::Vacant(e) = locations.entry(*p.loc()) {
+            e.insert(1);
+        } else {
+            *locations.get_mut(p.loc()).unwrap() += 1;
+        }
+    }
+    // Determine keys for particles to remove
+    let mut keys_to_remove: Vec<usize> = vec![];
+    for (k, p) in particles.iter() {
+        if *locations.get(p.loc()).unwrap() > 1 {
+            keys_to_remove.push(*k);
+        }
+    }
+    // Remove collided particles
+    for k in keys_to_remove.iter() {
+        particles.remove(k);
+    }
+}
+
+/// Calculates the Manhattan distance between each pair of particles
+fn calculate_pair_manhattan_distances(
+    particles: &HashMap<usize, Particle3D>,
+) -> HashMap<(usize, usize), u64> {
+    let mut pair_distances_manh: HashMap<(usize, usize), u64> = HashMap::new();
+    for (i, j) in particles.keys().sorted().tuple_combinations() {
+        let left = particles.get(i).unwrap();
+        let right = particles.get(j).unwrap();
+        let dist_manh = left.loc().get_manhattan_distance(right.loc());
+        pair_distances_manh.insert((*i, *j), dist_manh);
+    }
+    pair_distances_manh
 }
 
 #[cfg(test)]
