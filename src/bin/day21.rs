@@ -13,6 +13,11 @@ const PROBLEM_NAME: &str = "Fractal Art";
 const PROBLEM_INPUT_FILE: &str = "./input/day21.txt";
 const PROBLEM_DAY: u64 = 21;
 
+/// Function signature for function to transform a 2x2 array.
+type Grid2Transform = fn([[char; 2]; 2]) -> [[char; 2]; 2];
+/// Function signature for function to transform a 3x3 array.
+type Grid3Transform = fn([[char; 3]; 3]) -> [[char; 3]; 3];
+
 lazy_static! {
     /// Regex for matching rule converting a 2x2 grid section into 3x3 grid section
     static ref REGEX_RULE_FOUR: Regex =
@@ -24,13 +29,13 @@ lazy_static! {
 
     /// Sequence of transformations required to check all eight members of the symmetry group for a
     /// 2x2 array.
-    static ref TRANSFORMATION_GRID2: [fn(Box<[[char; 2]; 2]>) -> Box<[[char; 2]; 2]>; 7] =
+    static ref TRANSFORMATION_GRID2: [Grid2Transform; 7] =
         [flip_ud_grid2, flip_lr_grid2, rot90_ccw_grid2, flip_lr_grid2, flip_ud_grid2, flip_lr_grid2,
         rot90_ccw_grid2];
 
     /// Sequence of transformations required to check all eight members of the symmetry group for a
     /// 3x3 array.
-    static ref TRANSFORMATION_GRID3: [fn(Box<[[char; 3]; 3]>) -> Box<[[char; 3]; 3]>; 7] =
+    static ref TRANSFORMATION_GRID3: [Grid3Transform; 7] =
         [flip_ud_grid3, flip_lr_grid3, rot90_ccw_grid3, flip_lr_grid3, flip_ud_grid3, flip_lr_grid3,
         rot90_ccw_grid3];
 
@@ -109,7 +114,7 @@ fn parse_input_file_line(s: &str) -> Result<(String, String), InputFileParseErro
 
 /// Solves AOC 2017 Day 21 Part 1.
 ///
-/// ###
+/// Determines how many pixels are left on after applying 5 iterations of the enhancement rules.
 fn solve_part1(rules: &HashMap<String, String>) -> usize {
     let artgrid: Vec<Vec<char>> = generate_art(rules, 5);
     artgrid
@@ -120,9 +125,13 @@ fn solve_part1(rules: &HashMap<String, String>) -> usize {
 
 /// Solves AOC 2017 Day 21 Part 2.
 ///
-/// ###
-fn solve_part2(_input: &HashMap<String, String>) -> usize {
-    unimplemented!();
+/// Determines how many pixels are left on after applying 18 iterations of the enhancement rules.
+fn solve_part2(rules: &HashMap<String, String>) -> usize {
+    let artgrid: Vec<Vec<char>> = generate_art(rules, 18);
+    artgrid
+        .iter()
+        .map(|row| row.iter().filter(|&c| *c == '#').count())
+        .sum()
 }
 
 /// Generates a new art grid by applying n iterations of the enhancement rules over the default
@@ -160,7 +169,7 @@ fn apply_enhancement_rules_grid3(
     }
     for r in (0..artgrid.len()).step_by(old_unit) {
         'inner: for c in (0..artgrid.len()).step_by(old_unit) {
-            let mut subgrid = Box::new([
+            let mut subgrid = [
                 [artgrid[r][c], artgrid[r][c + 1], artgrid[r][c + 2]],
                 [
                     artgrid[r + 1][c],
@@ -172,7 +181,7 @@ fn apply_enhancement_rules_grid3(
                     artgrid[r + 2][c + 1],
                     artgrid[r + 2][c + 2],
                 ],
-            ]);
+            ];
             // Flip
             for i in 0..8 {
                 if i > 0 {
@@ -215,10 +224,10 @@ fn apply_enhancement_rules_grid2(
     }
     for r in (0..artgrid.len()).step_by(old_unit) {
         'inner: for c in (0..artgrid.len()).step_by(old_unit) {
-            let mut subgrid = Box::new([
+            let mut subgrid = [
                 [artgrid[r][c], artgrid[r][c + 1]],
                 [artgrid[r + 1][c], artgrid[r + 1][c + 1]],
-            ]);
+            ];
             // Flip
             for i in 0..8 {
                 if i > 0 {
@@ -247,45 +256,45 @@ fn apply_enhancement_rules_grid2(
 }
 
 /// Flips a 2x2 array about its horizontal axis of symmetry (up/down flip).
-fn flip_ud_grid2(input: Box<[[char; 2]; 2]>) -> Box<[[char; 2]; 2]> {
-    Box::new([[input[1][0], input[1][1]], [input[0][0], input[0][1]]])
+fn flip_ud_grid2(input: [[char; 2]; 2]) -> [[char; 2]; 2] {
+    [[input[1][0], input[1][1]], [input[0][0], input[0][1]]]
 }
 
 /// Flips a 2x2 array about its vertical axis of symmetry (left/right flip).
-fn flip_lr_grid2(input: Box<[[char; 2]; 2]>) -> Box<[[char; 2]; 2]> {
-    Box::new([[input[0][1], input[0][0]], [input[1][1], input[1][0]]])
+fn flip_lr_grid2(input: [[char; 2]; 2]) -> [[char; 2]; 2] {
+    [[input[0][1], input[0][0]], [input[1][1], input[1][0]]]
 }
 
 /// Rotates a 2x2 array by 90 degrees counterclockwise.
-fn rot90_ccw_grid2(input: Box<[[char; 2]; 2]>) -> Box<[[char; 2]; 2]> {
-    Box::new([[input[0][1], input[1][1]], [input[0][0], input[1][0]]])
+fn rot90_ccw_grid2(input: [[char; 2]; 2]) -> [[char; 2]; 2] {
+    [[input[0][1], input[1][1]], [input[0][0], input[1][0]]]
 }
 
 /// Flips a 3x3 array about its horizontal axis of symmetry (up/down flip).
-fn flip_ud_grid3(input: Box<[[char; 3]; 3]>) -> Box<[[char; 3]; 3]> {
-    Box::new([
+fn flip_ud_grid3(input: [[char; 3]; 3]) -> [[char; 3]; 3] {
+    [
         [input[2][0], input[2][1], input[2][2]],
         [input[1][0], input[1][1], input[1][2]],
         [input[0][0], input[0][1], input[0][2]],
-    ])
+    ]
 }
 
 /// Flips a 3x3 array about its vertical axis of symmetry (left/right flip).
-fn flip_lr_grid3(input: Box<[[char; 3]; 3]>) -> Box<[[char; 3]; 3]> {
-    Box::new([
+fn flip_lr_grid3(input: [[char; 3]; 3]) -> [[char; 3]; 3] {
+    [
         [input[0][2], input[0][1], input[0][0]],
         [input[1][2], input[1][1], input[1][0]],
         [input[2][2], input[2][1], input[2][0]],
-    ])
+    ]
 }
 
 /// Rotates a 3x3 array by 90 degrees counterclockwise.
-fn rot90_ccw_grid3(input: Box<[[char; 3]; 3]>) -> Box<[[char; 3]; 3]> {
-    Box::new([
+fn rot90_ccw_grid3(input: [[char; 3]; 3]) -> [[char; 3]; 3] {
+    [
         [input[0][2], input[1][2], input[2][2]],
         [input[0][1], input[1][1], input[2][1]],
         [input[0][0], input[1][0], input[2][0]],
-    ])
+    ]
 }
 
 #[cfg(test)]
