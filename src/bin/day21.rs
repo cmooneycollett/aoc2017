@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::fs;
-use std::iter;
 use std::time::Instant;
 
 use fancy_regex::Regex;
@@ -13,11 +12,6 @@ const PROBLEM_NAME: &str = "Fractal Art";
 const PROBLEM_INPUT_FILE: &str = "./input/day21.txt";
 const PROBLEM_DAY: u64 = 21;
 
-/// Function signature for function to transform a 2x2 array.
-type Grid2Transform = fn([[char; 2]; 2]) -> [[char; 2]; 2];
-/// Function signature for function to transform a 3x3 array.
-type Grid3Transform = fn([[char; 3]; 3]) -> [[char; 3]; 3];
-
 lazy_static! {
     /// Regex for matching rule converting a 2x2 grid section into 3x3 grid section
     static ref REGEX_RULE_FOUR: Regex =
@@ -26,18 +20,6 @@ lazy_static! {
     /// Regex for matching rule converting 3x3 grid section into 4x4 grid section
     static ref REGEX_RULE_NINE: Regex =
         Regex::new(r"^([.#]{3}/[.#]{3}/[.#]{3}) => ([.#]{4}/[.#]{4}/[.#]{4}/[.#]{4})$").unwrap();
-
-    /// Sequence of transformations required to check all eight members of the symmetry group for a
-    /// 2x2 array.
-    static ref TRANSFORMATION_GRID2: [Grid2Transform; 7] =
-        [flip_ud_grid2, flip_lr_grid2, rot90_ccw_grid2, flip_lr_grid2, flip_ud_grid2, flip_lr_grid2,
-        rot90_ccw_grid2];
-
-    /// Sequence of transformations required to check all eight members of the symmetry group for a
-    /// 3x3 array.
-    static ref TRANSFORMATION_GRID3: [Grid3Transform; 7] =
-        [flip_ud_grid3, flip_lr_grid3, rot90_ccw_grid3, flip_lr_grid3, flip_ud_grid3, flip_lr_grid3,
-        rot90_ccw_grid3];
 
     /// Artgrid state at the start of the problem before any enhancement rules are applied.
     static ref ARTGRID_START: Vec<Vec<char>> = vec![
@@ -143,158 +125,94 @@ fn generate_art(rules: &HashMap<String, String>, iterations: usize) -> Vec<Vec<c
         vec!['#', '#', '#'],
     ];
     for _ in 0..iterations {
-        artgrid = {
-            if artgrid.len() % 2 == 0 {
-                apply_enhancement_rules_grid2(rules, &artgrid)
-            } else {
-                apply_enhancement_rules_grid3(rules, &artgrid)
-            }
-        };
+        artgrid = apply_enhancement_rules(rules, &artgrid);
     }
     artgrid
 }
 
-/// Applies the enhancement rules to the artgrid with size being a multiple of 3 to generate a new
-/// and enhanced artgrid.
-fn apply_enhancement_rules_grid3(
+/// Applies the enhancement rules to the artgrid, returning the new and enhanced artgrid.
+fn apply_enhancement_rules(
     rules: &HashMap<String, String>,
     artgrid: &[Vec<char>],
 ) -> Vec<Vec<char>> {
+    // Calculate old and new subgrid units
+    let (old_subgrid_unit, new_subgrid_unit) = {
+        if artgrid.len() % 2 == 0 {
+            (2, 3)
+        } else {
+            (3, 4)
+        }
+    };
     // Initialise the new artgrid
-    let (old_unit, new_unit) = (3, 4);
-    let new_size = (artgrid.len() / old_unit) * new_unit;
-    let mut new_artgrid: Vec<Vec<char>> = vec![];
-    for _ in 0..new_size {
-        new_artgrid.push(iter::repeat('.').take(new_size).collect::<Vec<char>>());
-    }
-    for r in (0..artgrid.len()).step_by(old_unit) {
-        'inner: for c in (0..artgrid.len()).step_by(old_unit) {
-            let mut subgrid = [
-                [artgrid[r][c], artgrid[r][c + 1], artgrid[r][c + 2]],
-                [
-                    artgrid[r + 1][c],
-                    artgrid[r + 1][c + 1],
-                    artgrid[r + 1][c + 2],
-                ],
-                [
-                    artgrid[r + 2][c],
-                    artgrid[r + 2][c + 1],
-                    artgrid[r + 2][c + 2],
-                ],
-            ];
-            // Flip
-            for i in 0..8 {
-                if i > 0 {
-                    subgrid = TRANSFORMATION_GRID3[i - 1](subgrid);
+    let new_artgrid_size = (artgrid.len() / old_subgrid_unit) * new_subgrid_unit;
+    let mut new_artgrid = vec![vec!['.'; new_artgrid_size]; new_artgrid_size];
+    // Iterate over the subgrids in the old artgrid
+    for r in (0..artgrid.len()).step_by(old_subgrid_unit) {
+        'inner: for c in (0..artgrid[r].len()).step_by(old_subgrid_unit) {
+            // Extract subgrid
+            let mut subgrid = vec![vec!['.'; old_subgrid_unit]; old_subgrid_unit];
+            for y in 0..old_subgrid_unit {
+                for x in 0..old_subgrid_unit {
+                    subgrid[y][x] = artgrid[r + y][c + x];
                 }
+            }
+            // Look for rule match
+            for i in 0..8 {
+                // Transform subgrid
+                subgrid = {
+                    if i % 2 == 0 {
+                        rot180_artgrid(&subgrid)
+                    } else {
+                        flip_artgrid(&subgrid)
+                    }
+                };
+                // Convert subgrid to string key
                 let s_subgrid = subgrid
                     .iter()
                     .map(|row| row.iter().collect::<String>())
                     .join("");
+                // Check for rule match
                 if rules.contains_key(&s_subgrid) {
                     let enhanced_subgrid = rules.get(&s_subgrid).unwrap();
                     for (i, elem) in enhanced_subgrid.chars().enumerate() {
-                        let delta_r = i / new_unit;
-                        let delta_c = i % new_unit;
-                        let r_enhanced = (r / old_unit) * new_unit + delta_r;
-                        let c_enhanced = (c / old_unit) * new_unit + delta_c;
+                        let delta_r = i / new_subgrid_unit;
+                        let delta_c = i % new_subgrid_unit;
+                        let r_enhanced = (r / old_subgrid_unit) * new_subgrid_unit + delta_r;
+                        let c_enhanced = (c / old_subgrid_unit) * new_subgrid_unit + delta_c;
                         new_artgrid[r_enhanced][c_enhanced] = elem;
                     }
                     continue 'inner;
                 }
             }
-            panic!("Could not find enhanced subgrid - grid3");
+            panic!("Could not find rule match for subgrid!");
         }
     }
     new_artgrid
 }
 
-/// Applies the enhancement rules to the artgrid with size being a multiple of 2 to generate a new
-/// and enhanced artgrid.
-fn apply_enhancement_rules_grid2(
-    rules: &HashMap<String, String>,
-    artgrid: &[Vec<char>],
-) -> Vec<Vec<char>> {
-    // Initialise the new artgrid
-    let (old_unit, new_unit) = (2, 3);
-    let new_size = (artgrid.len() / old_unit) * new_unit;
-    let mut new_artgrid: Vec<Vec<char>> = vec![];
-    for _ in 0..new_size {
-        new_artgrid.push(iter::repeat('.').take(new_size).collect::<Vec<char>>());
-    }
-    for r in (0..artgrid.len()).step_by(old_unit) {
-        'inner: for c in (0..artgrid.len()).step_by(old_unit) {
-            let mut subgrid = [
-                [artgrid[r][c], artgrid[r][c + 1]],
-                [artgrid[r + 1][c], artgrid[r + 1][c + 1]],
-            ];
-            // Flip
-            for i in 0..8 {
-                if i > 0 {
-                    subgrid = TRANSFORMATION_GRID2[i - 1](subgrid);
-                }
-                let s_subgrid = subgrid
-                    .iter()
-                    .map(|row| row.iter().collect::<String>())
-                    .join("");
-                if rules.contains_key(&s_subgrid) {
-                    let enhanced_subgrid = rules.get(&s_subgrid).unwrap();
-                    for (i, elem) in enhanced_subgrid.chars().enumerate() {
-                        let delta_r = i / new_unit;
-                        let delta_c = i % new_unit;
-                        let r_enhanced = (r / old_unit) * new_unit + delta_r;
-                        let c_enhanced = (c / old_unit) * new_unit + delta_c;
-                        new_artgrid[r_enhanced][c_enhanced] = elem;
-                    }
-                    continue 'inner;
-                }
-            }
-            panic!("Could not find enhanced subgrid - grid3");
-        }
+/// Flips the square artgrid about its centre horizontal axis by inverting the y-axis (rows),
+/// leaving columns unchanged.
+fn flip_artgrid(artgrid: &[Vec<char>]) -> Vec<Vec<char>> {
+    let mut new_artgrid = vec![vec!['.'; artgrid.len()]; artgrid.len()];
+    for (r, row) in new_artgrid.iter_mut().enumerate() {
+        let old_r = artgrid.len() - r - 1;
+        row.copy_from_slice(&artgrid[old_r]);
     }
     new_artgrid
 }
 
-/// Flips a 2x2 array about its horizontal axis of symmetry (up/down flip).
-fn flip_ud_grid2(input: [[char; 2]; 2]) -> [[char; 2]; 2] {
-    [[input[1][0], input[1][1]], [input[0][0], input[0][1]]]
-}
-
-/// Flips a 2x2 array about its vertical axis of symmetry (left/right flip).
-fn flip_lr_grid2(input: [[char; 2]; 2]) -> [[char; 2]; 2] {
-    [[input[0][1], input[0][0]], [input[1][1], input[1][0]]]
-}
-
-/// Rotates a 2x2 array by 90 degrees counterclockwise.
-fn rot90_ccw_grid2(input: [[char; 2]; 2]) -> [[char; 2]; 2] {
-    [[input[0][1], input[1][1]], [input[0][0], input[1][0]]]
-}
-
-/// Flips a 3x3 array about its horizontal axis of symmetry (up/down flip).
-fn flip_ud_grid3(input: [[char; 3]; 3]) -> [[char; 3]; 3] {
-    [
-        [input[2][0], input[2][1], input[2][2]],
-        [input[1][0], input[1][1], input[1][2]],
-        [input[0][0], input[0][1], input[0][2]],
-    ]
-}
-
-/// Flips a 3x3 array about its vertical axis of symmetry (left/right flip).
-fn flip_lr_grid3(input: [[char; 3]; 3]) -> [[char; 3]; 3] {
-    [
-        [input[0][2], input[0][1], input[0][0]],
-        [input[1][2], input[1][1], input[1][0]],
-        [input[2][2], input[2][1], input[2][0]],
-    ]
-}
-
-/// Rotates a 3x3 array by 90 degrees counterclockwise.
-fn rot90_ccw_grid3(input: [[char; 3]; 3]) -> [[char; 3]; 3] {
-    [
-        [input[0][2], input[1][2], input[2][2]],
-        [input[0][1], input[1][1], input[2][1]],
-        [input[0][0], input[1][0], input[2][0]],
-    ]
+/// Rotates the square artgrid by an equivalent of 180 degrees. The operation results in the x-axis
+/// (columns) and y-axis (rows) being inverted and switched.
+fn rot180_artgrid(artgrid: &[Vec<char>]) -> Vec<Vec<char>> {
+    let mut new_artgrid = vec![vec!['.'; artgrid.len()]; artgrid.len()];
+    for (r, row) in new_artgrid.iter_mut().enumerate() {
+        for c in 0..row.len() {
+            let old_r = artgrid.len() - r - 1;
+            let old_c = row.len() - c - 1;
+            row[c] = artgrid[old_c][old_r];
+        }
+    }
+    new_artgrid
 }
 
 #[cfg(test)]
