@@ -20,13 +20,6 @@ lazy_static! {
     /// Regex for matching rule converting 3x3 grid section into 4x4 grid section
     static ref REGEX_RULE_NINE: Regex =
         Regex::new(r"^([.#]{3}/[.#]{3}/[.#]{3}) => ([.#]{4}/[.#]{4}/[.#]{4}/[.#]{4})$").unwrap();
-
-    /// Artgrid state at the start of the problem before any enhancement rules are applied.
-    static ref ARTGRID_START: Vec<Vec<char>> = vec![
-        vec!['.', '#', '.'],
-        vec!['.', '.', '#'],
-        vec!['#', '#', '#'],
-    ];
 }
 
 /// Processes the AOC 2017 Day 21 input file and solves both parts of the problem. Solutions are
