@@ -1,5 +1,5 @@
+use std::fs;
 use std::time::Instant;
-use std::{fs, str::FromStr};
 
 use aoc2017::utils::machines::soundcomputer::{Instruction, SoundComputer};
 
@@ -47,11 +47,7 @@ fn process_input_file(filename: &str) -> Vec<Instruction> {
     // Read contents of problem input file
     let raw_input = fs::read_to_string(filename).unwrap();
     // Process input file contents into data structure
-    raw_input
-        .trim()
-        .lines()
-        .map(|line| Instruction::from_str(line).unwrap())
-        .collect::<Vec<Instruction>>()
+    Instruction::parse_raw_input(&raw_input)
 }
 
 /// Solves AOC 2017 Day 18 Part 1.

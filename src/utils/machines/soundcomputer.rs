@@ -14,6 +14,8 @@ lazy_static! {
     static ref MOD_REGEX: Regex = Regex::new(r"^mod ([a-z]) ([a-z]|-?\d+)$").unwrap();
     static ref RCV_REGEX: Regex = Regex::new(r"^rcv ([a-z])$").unwrap();
     static ref JGZ_REGEX: Regex = Regex::new(r"^jgz ([a-z]|-?\d+) ([a-z]|-?\d+)$").unwrap();
+    static ref SUB_REGEX: Regex = Regex::new(r"^sub ([a-z]) ([a-z]|-?\d+)$").unwrap();
+    static ref JNZ_REGEX: Regex = Regex::new(r"^jnz ([a-z]|-?\d+) ([a-z]|-?\d+)$").unwrap();
 }
 
 /// Custom error type indicating that the parsing of raw input to a variant of the [`Instruction`]
@@ -49,6 +51,24 @@ pub enum Instruction {
         arg1: InstructionArgument,
         arg2: InstructionArgument,
     },
+    /// Subtract
+    Sub { reg: char, arg: InstructionArgument },
+    /// Jump if not zero
+    Jnz {
+        arg1: InstructionArgument,
+        arg2: InstructionArgument,
+    },
+}
+
+impl Instruction {
+    /// Parses a line-separated sequence of instructions into a vector.
+    pub fn parse_raw_input(raw_input: &str) -> Vec<Instruction> {
+        raw_input
+            .trim()
+            .lines()
+            .map(|line| Instruction::from_str(line).unwrap())
+            .collect::<Vec<Instruction>>()
+    }
 }
 
 impl FromStr for Instruction {
@@ -81,6 +101,14 @@ impl FromStr for Instruction {
             let arg1 = InstructionArgument::from_str(&caps[1]).unwrap();
             let arg2 = InstructionArgument::from_str(&caps[2]).unwrap();
             return Ok(Instruction::Jgz { arg1, arg2 });
+        } else if let Ok(Some(caps)) = SUB_REGEX.captures(s) {
+            let reg = caps[1].parse::<char>().unwrap();
+            let arg = InstructionArgument::from_str(&caps[2]).unwrap();
+            return Ok(Instruction::Sub { reg, arg });
+        } else if let Ok(Some(caps)) = JNZ_REGEX.captures(s) {
+            let arg1 = InstructionArgument::from_str(&caps[1]).unwrap();
+            let arg2 = InstructionArgument::from_str(&caps[2]).unwrap();
+            return Ok(Instruction::Jnz { arg1, arg2 });
         }
         // Failed to match the input text to an instruction pattern
         Err(InstructionParseError)
@@ -124,6 +152,7 @@ pub struct SoundComputer {
     halted: bool,
     total_sounds_sent: u64,
     last_sound_sent: Option<i64>,
+    mul_executions_count: usize,
 }
 
 impl SoundComputer {
@@ -139,6 +168,7 @@ impl SoundComputer {
             halted: false,
             total_sounds_sent: 0,
             last_sound_sent: None,
+            mul_executions_count: 0,
         }
     }
 
@@ -172,6 +202,7 @@ impl SoundComputer {
                 Instruction::Mul { reg, arg } => {
                     let value = self.decode_instruction_argument(arg).unwrap();
                     *self.registers.get_mut(&reg).unwrap() *= value;
+                    self.mul_executions_count += 1;
                 }
                 Instruction::Mod { reg, arg } => {
                     let value = self.decode_instruction_argument(arg).unwrap();
@@ -194,19 +225,22 @@ impl SoundComputer {
                     let check_value = self.decode_instruction_argument(arg1).unwrap();
                     let jmp = self.decode_instruction_argument(arg2).unwrap();
                     if check_value > 0 {
-                        match jmp.is_negative() {
-                            true => {
-                                // Check if the jump would move the pc left of instruction space
-                                let jump_value = usize::try_from(jmp.unsigned_abs()).unwrap();
-                                if jump_value > self.pc {
-                                    self.halted = true;
-                                    return;
-                                }
-                                self.pc -= jump_value;
-                            }
-                            false => {
-                                self.pc += usize::try_from(jmp.unsigned_abs()).unwrap();
-                            }
+                        if self.conduct_pc_jump(jmp) {
+                            return;
+                        }
+                        continue;
+                    }
+                }
+                Instruction::Sub { reg, arg } => {
+                    let value = self.decode_instruction_argument(arg).unwrap();
+                    *self.registers.get_mut(&reg).unwrap() -= value;
+                }
+                Instruction::Jnz { arg1, arg2 } => {
+                    let check_value = self.decode_instruction_argument(arg1).unwrap();
+                    let jmp = self.decode_instruction_argument(arg2).unwrap();
+                    if check_value != 0 {
+                        if self.conduct_pc_jump(jmp) {
+                            return;
                         }
                         continue;
                     }
@@ -281,6 +315,11 @@ impl SoundComputer {
         self.total_sounds_sent
     }
 
+    /// Gets the number of times the [`SoundComputer`] has executed the MUL (multiply) instruction.
+    pub fn get_mul_executions_count(&self) -> usize {
+        self.mul_executions_count
+    }
+
     /// Decodes an [`InstructionArgument`] variant by returning its integer value or the value held
     /// in the designated register.
     ///
@@ -293,5 +332,27 @@ impl SoundComputer {
             InstructionArgument::Value { val: value } => Ok(value),
             InstructionArgument::Register { reg: register } => self.read_register(&register),
         }
+    }
+
+    /// Helper function to implement a jump to the [`SoundComputer`] program counter.
+    ///
+    /// Returns true if the jump moves the PC outside of the instruction space and thereby halts the
+    /// machine, otherwise returns false.
+    fn conduct_pc_jump(&mut self, jmp: i64) -> bool {
+        match jmp.is_negative() {
+            true => {
+                // Check if the jump would move the pc left of instruction space
+                let jump_value = usize::try_from(jmp.unsigned_abs()).unwrap();
+                if jump_value > self.pc {
+                    self.halted = true;
+                    return true;
+                }
+                self.pc -= jump_value;
+            }
+            false => {
+                self.pc += usize::try_from(jmp.unsigned_abs()).unwrap();
+            }
+        }
+        false
     }
 }
