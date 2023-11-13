@@ -320,6 +320,28 @@ impl SoundComputer {
         self.mul_executions_count
     }
 
+    /// Extracts the the value from the last argument in the instruction at the given index.
+    ///
+    /// Returns None if the [`SoundComputer`] has an empty instruction set, the index is outside of
+    /// the instruction space or the instruction at the location does not have any argument fields.
+    pub fn extract_last_arg_value(&self, i: usize) -> Option<i64> {
+        if self.instructions.is_empty() || i >= self.instructions.len() {
+            return None;
+        }
+        let arg = match self.instructions[i] {
+            Instruction::Snd { arg } => arg,
+            Instruction::Set { reg: _, arg } => arg,
+            Instruction::Add { reg: _, arg } => arg,
+            Instruction::Mul { reg: _, arg } => arg,
+            Instruction::Mod { reg: _, arg } => arg,
+            Instruction::Rcv { reg: _ } => return None,
+            Instruction::Jgz { arg1: _, arg2 } => arg2,
+            Instruction::Sub { reg: _, arg } => arg,
+            Instruction::Jnz { arg1: _, arg2 } => arg2,
+        };
+        self.decode_instruction_argument(arg).ok()
+    }
+
     /// Decodes an [`InstructionArgument`] variant by returning its integer value or the value held
     /// in the designated register.
     ///

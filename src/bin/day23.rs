@@ -62,9 +62,40 @@ fn solve_part1(instructions: &[Instruction]) -> usize {
 
 /// Solves AOC 2017 Day 23 Part 2.
 ///
-/// ###
-fn solve_part2(_instructions: &[Instruction]) -> i64 {
-    unimplemented!();
+/// Returns the value held in register "h" of SoundComputer after program execution halts, with
+/// debug switch toggled off.
+///
+/// Optimised program counts the number of composite numbers (increasing by the step coded into the
+/// second-last instruction) between a lower and upper limit. The lower and upper limits are
+/// calculated based on the seed value coded into the first instruction of the program.
+fn solve_part2(instructions: &[Instruction]) -> usize {
+    // Extract seed and step values from the sound computer program
+    let sound_comp = SoundComputer::new(instructions, false);
+    let seed = sound_comp.extract_last_arg_value(0).unwrap().unsigned_abs();
+    let step = sound_comp
+        .extract_last_arg_value(instructions.len() - 2)
+        .unwrap()
+        .unsigned_abs();
+    // Calculate lower and upper bounds for composite number check
+    let lower = seed * 100 + 100000;
+    let upper = lower + 17000;
+    // Count composite numbers between upper and lower bound
+    (lower..=upper)
+        .step_by(step as usize)
+        .map(is_composite)
+        .filter(|&composite| composite)
+        .count()
+}
+
+/// Checks if a given number n is prime.
+fn is_composite(n: u64) -> bool {
+    let upper = (n as f64).sqrt() as u64 + 1;
+    for value in 2..=upper {
+        if n % value == 0 {
+            return true;
+        }
+    }
+    false
 }
 
 #[cfg(test)]
